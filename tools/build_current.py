@@ -239,8 +239,8 @@ def prepare(tree, dstar=False):
 	run('git', 'apply', '--binary', PATCH_DIR / 'nxdn-scan-call-replay.patch', cwd=tree)
 	run('git', 'apply', '--binary', PATCH_DIR / 'issue121-aprs-dual-watch.patch', cwd=tree)
 	run('git', 'apply', '--binary', PATCH_DIR / 'issue119-tier3-rx.patch', cwd=tree)
-	# Tactical visual style (white phosphor palette and reticle boot screen): last, so upstream patches stay untouched
-	run('git', 'apply', '--binary', PATCH_DIR / 'tactical-white-phosphor.patch', cwd=tree)
+	# Tactical visual styles (White Phosphor and Field Drab): last, so upstream patches stay untouched
+	run('git', 'apply', '--binary', PATCH_DIR / 'tactical-themes.patch', cwd=tree)
 	run('git', 'submodule', 'update', '--init', '--depth=1', 'third_party/FreeRTOS-Kernel', cwd=tree)
 
 
