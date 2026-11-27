@@ -1,0 +1,391 @@
+diff --git a/core/ui/lang/es.po b/core/ui/lang/es.po
+index ccbf0b2..b23bf04 100644
+--- a/core/ui/lang/es.po
++++ b/core/ui/lang/es.po
+@@ -3915,6 +3915,16 @@ msgctxt "SET_VALUE_STYLE_CENTERED"
+ msgid "Centered Home"
+ msgstr "Inicio centrado"
+ 
++#: core/ui/ui_menus.c
++msgctxt "SET_VALUE_STYLE_TACTICAL"
++msgid "Tactical"
++msgstr "Táctico"
++
++#: core/ui/ui_menus.c
++msgctxt "SET_VALUE_STYLE_FIELD"
++msgid "Field Drab"
++msgstr "Verde campaña"
++
+ #: core/ui/ui_menus.c
+ msgctxt "SET_VALUE_THEME_DARK"
+ msgid "Dark"
+diff --git a/core/ui/lang/fr.po b/core/ui/lang/fr.po
+index 3b95727..1521584 100644
+--- a/core/ui/lang/fr.po
++++ b/core/ui/lang/fr.po
+@@ -3907,6 +3907,16 @@ msgctxt "SET_VALUE_STYLE_CENTERED"
+ msgid "Centered Home"
+ msgstr "Accueil centré"
+ 
++#: core/ui/ui_menus.c
++msgctxt "SET_VALUE_STYLE_TACTICAL"
++msgid "Tactical"
++msgstr "Tactique"
++
++#: core/ui/ui_menus.c
++msgctxt "SET_VALUE_STYLE_FIELD"
++msgid "Field Drab"
++msgstr "Kaki terrain"
++
+ #: core/ui/ui_menus.c
+ msgctxt "SET_VALUE_THEME_DARK"
+ msgid "Dark"
+diff --git a/core/ui/lang/it.po b/core/ui/lang/it.po
+index c35b7e1..4b3c425 100644
+--- a/core/ui/lang/it.po
++++ b/core/ui/lang/it.po
+@@ -3907,6 +3907,16 @@ msgctxt "SET_VALUE_STYLE_CENTERED"
+ msgid "Centered Home"
+ msgstr "Home centrata"
+ 
++#: core/ui/ui_menus.c
++msgctxt "SET_VALUE_STYLE_TACTICAL"
++msgid "Tactical"
++msgstr "Tattico"
++
++#: core/ui/ui_menus.c
++msgctxt "SET_VALUE_STYLE_FIELD"
++msgid "Field Drab"
++msgstr "Verde militare"
++
+ #: core/ui/ui_menus.c
+ msgctxt "SET_VALUE_THEME_DARK"
+ msgid "Dark"
+diff --git a/core/ui/lang/zh.po b/core/ui/lang/zh.po
+index e6f3e78..df10da4 100644
+--- a/core/ui/lang/zh.po
++++ b/core/ui/lang/zh.po
+@@ -3909,6 +3909,16 @@ msgctxt "SET_VALUE_STYLE_CENTERED"
+ msgid "Centered Home"
+ msgstr "主页中置"
+ 
++#: core/ui/ui_menus.c
++msgctxt "SET_VALUE_STYLE_TACTICAL"
++msgid "Tactical"
++msgstr "Tactical"
++
++#: core/ui/ui_menus.c
++msgctxt "SET_VALUE_STYLE_FIELD"
++msgid "Field Drab"
++msgstr "Field Drab"
++
+ #: core/ui/ui_menus.c
+ msgctxt "SET_VALUE_THEME_DARK"
+ msgid "Dark"
+diff --git a/core/ui/ui_menus.c b/core/ui/ui_menus.c
+index 11479dc..62a1e13 100644
+--- a/core/ui/ui_menus.c
++++ b/core/ui/ui_menus.c
+@@ -7971,9 +7971,10 @@ static const tr_id_t n_backlight[] = { TRX(SET_VALUE_BACKLIGHT_5S_20S, "5s/20s")
+ };
+ #if CONFIG_UI_COLOR
+ #if CONFIG_UI_KAWAII
+-static const int16_t v_style[] = { UI_STYLE_PINK, UI_STYLE_RADIOFOUNDRY, UI_STYLE_CENTERED };
++static const int16_t v_style[] = { UI_STYLE_PINK, UI_STYLE_RADIOFOUNDRY, UI_STYLE_CENTERED, UI_STYLE_TACTICAL, UI_STYLE_FIELD };
+ static const tr_id_t n_style[] = { TRN(SET_VALUE_ACCENT_PINK, "Pink"), TRX(SET_VALUE_STYLE_CLASSIC, "RadioFoundry"),
+-	TRN(SET_VALUE_STYLE_CENTERED, "Centered Home") };
++	TRN(SET_VALUE_STYLE_CENTERED, "Centered Home"), TRN(SET_VALUE_STYLE_TACTICAL, "Tactical"),
++	TRN(SET_VALUE_STYLE_FIELD, "Field Drab") };
+ #endif
+ static const int16_t v_theme[] = { 0, 1, 2 };
+ static const tr_id_t n_theme[] = {
+@@ -8263,7 +8264,7 @@ static const set_item_t s_display[] = {
+ 		UI_SET_LABEL_FIRST),
+ #endif
+ #if CONFIG_UI_COLOR && CONFIG_UI_KAWAII
+-	LIST(TRN(SET_LABEL_VISUAL_STYLE, "Visual style"), "classic theme pink centered home estilo", UI_SET_CLASSIC_STYLE,
++	LIST(TRN(SET_LABEL_VISUAL_STYLE, "Visual style"), "classic theme pink centered home tactical night vision field drab olive estilo", UI_SET_CLASSIC_STYLE,
+ 		v_style, n_style),
+ 	TOGGLE(TRN(SET_LABEL_LARGE_CHANNEL_NAME, "Large channel name"), "Home Pink frequency name", UI_SET_HOME_NAME_FIRST),
+ #endif
+diff --git a/core/ui/ui_screens.c b/core/ui/ui_screens.c
+index d722143..5ce0557 100644
+--- a/core/ui/ui_screens.c
++++ b/core/ui/ui_screens.c
+@@ -79,6 +79,47 @@ static bool centered_home(void)
+ 	return ui_style == UI_STYLE_CENTERED && ui_style_available();
+ }
+ 
++// The tactical styles: RadioFoundry's layout in a palette of their own, with no ornaments. Each palette has few hues,
++// so it costs few of the 16 palette slots; every color is exact in RGB565
++typedef struct {
++	color_t bg, fg, dim, line, tx, rx, warn, idle, hint_bg, priv;
++	color_t strip_bg, strip_warn;	// the filled status strip (its text is bg)
++	color_t focus, chnum;		// the focus row (its text is bg), Home's channel number
++	bool badge;			// boot emblem: a unit badge, else a reticle
++} tac_pal_t;
++
++// White phosphor: blue-green white on near-black, as a white phosphor night vision tube. Text on the background at
++// least 7:1 (fg 17:1, dim 8:1); TX stays red-orange, the one warm color, so it can't be missed
++static const tac_pal_t tac_nvg = {
++	.bg = RGB565(8, 16, 16), .fg = RGB565(216, 248, 240), .dim = RGB565(136, 176, 176), .line = RGB565(40, 64, 64),
++	.tx = RGB565(200, 48, 24), .rx = RGB565(160, 240, 248), .warn = RGB565(248, 216, 112), .idle = RGB565(88, 120, 120),
++	.hint_bg = RGB565(20, 36, 36), .priv = RGB565(120, 200, 248),
++	.strip_bg = RGB565(136, 176, 176), .strip_warn = RGB565(96, 40, 0),	// muted, so the RX pill stands out on it
++	.focus = RGB565(216, 248, 240), .chnum = RGB565(160, 240, 248), .badge = false,
++};
++
++// Field Drab: tan text on olive drab, coyote highlights, as gear stencils and unit patches. Text on the background
++// at least 6:1 (fg 13:1, dim 6:1)
++static const tac_pal_t tac_field = {
++	.bg = RGB565(24, 28, 16), .fg = RGB565(224, 216, 184), .dim = RGB565(160, 148, 112), .line = RGB565(76, 80, 52),
++	.tx = RGB565(200, 56, 32), .rx = RGB565(168, 192, 80), .warn = RGB565(232, 160, 48), .idle = RGB565(120, 112, 80),
++	.hint_bg = RGB565(44, 48, 32), .priv = RGB565(144, 176, 208),
++	.strip_bg = RGB565(224, 216, 184), .strip_warn = RGB565(120, 48, 0),	// tan, so the olive RX pill stands out on it
++	.focus = RGB565(200, 168, 104), .chnum = RGB565(200, 168, 104), .badge = true,
++};
++
++static const tac_pal_t *tac_pal(void)
++{
++	if (!ui_style_available())
++		return NULL;
++	return ui_style == UI_STYLE_TACTICAL ? &tac_nvg : ui_style == UI_STYLE_FIELD ? &tac_field : NULL;
++}
++
++static bool tactical(void)
++{
++	return tac_pal() != NULL;
++}
++
+ bool ui_home_name_first_available(void)
+ {
+ 	return kawaii();
+@@ -161,9 +202,145 @@ static void kawaii_boot(const char *board_name, const char *version, const char
+ 	sb_str(&b, version);
+ 	kawaii_center(ui_layout.tiny, h - ui_layout.tiny->h - 2, foot, ROSE_INK);
+ }
++
++// --- Tactical boot screen: a reticle, the board name, the owner's lines, board and version. Drawn from lines in the
++// palette's colors (no bitmap)
++static void tac_circle(int cx, int cy, int r, color_t c)
++{
++	int x = r, y = 0, err = 1 - r;
++	while (x >= y) {
++		gfx_pixel(cx + x, cy + y, c); gfx_pixel(cx - x, cy + y, c);
++		gfx_pixel(cx + x, cy - y, c); gfx_pixel(cx - x, cy - y, c);
++		gfx_pixel(cx + y, cy + x, c); gfx_pixel(cx - y, cy + x, c);
++		gfx_pixel(cx + y, cy - x, c); gfx_pixel(cx - y, cy - x, c);
++		y++;
++		if (err < 0)
++			err += 2 * y + 1;
++		else {
++			x--;
++			err += 2 * (y - x) + 1;
++		}
++	}
++}
++
++static void tac_brackets(int cx, int cy, int b, int l, color_t c)
++{
++	gfx_hline(cx - b, cy - b, l, c); gfx_vline(cx - b, cy - b, l, c);
++	gfx_hline(cx + b - l + 1, cy - b, l, c); gfx_vline(cx + b, cy - b, l, c);
++	gfx_hline(cx - b, cy + b, l, c); gfx_vline(cx - b, cy + b - l + 1, l, c);
++	gfx_hline(cx + b - l + 1, cy + b, l, c); gfx_vline(cx + b, cy + b - l + 1, l, c);
++}
++
++static void tac_reticle(const tac_pal_t *p, int cx, int cy, int r)
++{
++	int r2 = r * 2 / 3, r3 = r / 3, gap = r / 6;
++	tac_circle(cx, cy, r, p->line);
++	tac_circle(cx, cy, r2, p->fg);
++	tac_circle(cx, cy, r3, p->dim);
++	// The cross, open in the middle
++	gfx_vline(cx, cy - r2, r2 - gap, p->fg);
++	gfx_vline(cx, cy + gap + 1, r2 - gap, p->fg);
++	gfx_hline(cx - r2, cy, r2 - gap, p->fg);
++	gfx_hline(cx + gap + 1, cy, r2 - gap, p->fg);
++	// Ticks on the outer ring: long at the four points, short between
++	for (int i = 1; i <= 3; i++) {
++		int d = r2 + i * (r - r2) / 4;
++		int t = i == 2 ? 3 : 2;
++		gfx_hline(cx - t, cy - d, 2 * t + 1, p->dim);
++		gfx_hline(cx - t, cy + d, 2 * t + 1, p->dim);
++		gfx_vline(cx - d, cy - t, 2 * t + 1, p->dim);
++		gfx_vline(cx + d, cy - t, 2 * t + 1, p->dim);
++	}
++	// The center: a small diamond
++	for (int k = 0; k < 3; k++) {
++		gfx_hline(cx - k, cy - 2 + k, 2 * k + 1, p->fg);
++		gfx_hline(cx - k, cy + 2 - k, 2 * k + 1, p->fg);
++	}
++	tac_brackets(cx, cy, r + 6, r / 4, p->fg);
++}
++
++// A unit badge: a shield (square shoulders, a pointed foot) with a mast and two chevrons, in a 2 r square
++static void tac_badge(const tac_pal_t *p, int cx, int cy, int r)
++{
++	int top = cy - r, side = r - 4, body = r * 6 / 5;	// straight sides, then the point
++	for (int t = 0; t < 3; t++) {			// a 3 px coyote border
++		int x0 = cx - side + t, x1 = cx + side - t, y0 = top + t, yb = top + body;
++		gfx_hline(x0, y0, x1 - x0 + 1, p->focus);
++		gfx_vline(x0, y0, yb - y0, p->focus);
++		gfx_vline(x1, y0, yb - y0, p->focus);
++		int len = 2 * r - body - t;		// the two edges down to the point, one pixel in a row
++		for (int k = 0; k < len; k++) {
++			int dx = (side - t) * k / len;
++			gfx_pixel(x0 + dx, yb + k, p->focus);
++			gfx_pixel(x1 - dx, yb + k, p->focus);
++		}
++	}
++	// Inside: a hint-colored field with a dashed inner rule
++	for (int y = top + 5; y < top + body; y++)
++		gfx_hline(cx - side + 5, y, 2 * side - 9, p->hint_bg);
++	for (int x = cx - side + 7; x < cx + side - 6; x += 6)
++		gfx_hline(x, top + 7, 3, p->line);
++	// The mast: a vertical with a crossbar foot and two arcs either side, as an antenna on the air
++	int my = top + r / 3, mh = r * 2 / 3;
++	for (int d = -1; d <= 1; d++)
++		gfx_vline(cx + d, my, mh, p->fg);
++	gfx_hline(cx - r / 4, my + mh, r / 2 + 1, p->fg);
++	for (int a = 0; a < 2; a++) {
++		int ar = r / 5 + a * r / 6;
++		for (int y = -ar * 3 / 4; y <= ar * 3 / 4; y++) {
++			int x = 0;
++			while ((x + 1) * (x + 1) + y * y <= ar * ar)
++				x++;
++			gfx_pixel(cx - x - 1, my + mh / 3 + y, p->focus);
++			gfx_pixel(cx + x + 1, my + mh / 3 + y, p->focus);
++		}
++	}
++	// Two chevrons under it, pointing down
++	for (int c = 0; c < 2; c++) {
++		int y0 = my + mh + 6 + c * 7, half = r / 2;
++		for (int k = 0; k <= half; k++)
++			for (int t = 0; t < 3; t++) {
++				gfx_pixel(cx - half + k, y0 + k * 2 / 5 + t, p->focus);
++				gfx_pixel(cx + half - k, y0 + k * 2 / 5 + t, p->focus);
++			}
++	}
++}
++
++static void tactical_boot(const char *board_name, const char *version, const char *line1, const char *line2)
++{
++	const tac_pal_t *p = tac_pal();
++	int w = gfx_width(), h = gfx_height();
++	const ui_layout_t *L = &ui_layout;
++	gfx_clear(p->bg);
++	int r = h >= 300 ? 56 : 40, cy = (h >= 300 ? 36 : 20) + r + 6;
++	if (p->badge)
++		tac_badge(p, w / 2, cy, r);
++	else
++		tac_reticle(p, w / 2, cy, r);
++	int y = cy + r + 20;
++	const font_t *nf = gfx_text_width(L->large, board_name) <= w - 8 ? L->large : L->medium;
++	kawaii_center(nf, y, board_name, p->fg);
++	y += nf->h + 4;
++	gfx_hline(w / 2 - w / 6, y, w / 3, p->badge ? p->focus : p->dim);
++	y += 8;
++	if (line1 != NULL && line1[0]) {
++		kawaii_center(L->small, y, line1, p->fg);
++		y += L->small->h;
++	}
++	if (line2 != NULL && line2[0])
++		kawaii_center(L->small, y, line2, p->fg);
++	char foot[48];
++	sbuf_t b;
++	sb_init(&b, foot, sizeof foot);
++	sb_str(&b, board_name);
++	sb_chr(&b, ' ');
++	sb_str(&b, version);
++	kawaii_center(L->tiny, h - L->tiny->h - 2, foot, p->dim);
++}
+ #else
+ #define kawaii() false
+ #define centered_home() false
++#define tactical() false
+ #endif
+ 
+ static const color_t acc[UI_ACCENT_COUNT] = {
+@@ -210,7 +387,7 @@ static void accent_apply(void)
+ 	if (a != UI_ACCENT_DEFAULT) {
+ 		ui_col.focus = c;
+ 		ui_col.focus_fg = RGB565(0, 0, 0);
+-		ui_col.chnum = ui_theme == 1 ? ui_col.fg : c;	// light shades don't read as digits on white
++		ui_col.chnum = ui_theme == 1 && !tactical() ? ui_col.fg : c;	// light shades don't read as digits on white
+ 	}
+ #if CONFIG_UI_KAWAII
+ 	if (kawaii() && ui_theme != 2 && (a == UI_ACCENT_DEFAULT || a == UI_ACCENT_PINK)) {
+@@ -219,6 +396,14 @@ static void accent_apply(void)
+ 		ui_col.chnum = ROSE_ACCENT;
+ 		ui_col.strip_warn = ROSE_INK;
+ 	}
++	if (tactical() && ui_theme != 2 && a == UI_ACCENT_DEFAULT) {
++		const tac_pal_t *p = tac_pal();
++		ui_col.strip_bg = p->strip_bg;
++		ui_col.strip_warn = p->strip_warn;
++		ui_col.focus = p->focus;		// the focus row in reverse video
++		ui_col.focus_fg = p->bg;
++		ui_col.chnum = p->chnum;
++	}
+ #endif
+ }
+ 
+@@ -282,6 +467,23 @@ void ui_theme_set(uint8_t theme)
+ 		ui_col.hint_bg = ROSE_SOFT;
+ 		ui_col.priv = ROSE_ACCENT;
+ 	}
++	if (tactical() && ui_theme != 2) {
++		// Light and dark alike: these are night displays. High contrast keeps its own colors
++		const tac_pal_t *p = tac_pal();
++		ui_col.bg = p->bg;
++		ui_col.fg = p->fg;
++		ui_col.dim = p->dim;
++		ui_col.line = p->line;
++		ui_col.tx = p->tx;
++		ui_col.rx = p->rx;
++		ui_col.warn = p->warn;
++		ui_col.idle = p->idle;
++		ui_col.focus = p->focus;
++		ui_col.hint_bg = p->hint_bg;
++		ui_col.priv = p->priv;
++		ui_col.pill_fg = p->fg;
++		ui_col.pill_dark_fg = p->bg;		// text on light pills and on the filled strip
++	}
+ #endif
+ 	accent_apply();
+ }
+@@ -1245,6 +1447,10 @@ void ui_draw_splash(const char *board_name, const char *version, const char *lin
+ 		kawaii_boot(board_name, version, line1, line2);
+ 		return;
+ 	}
++	if (tactical()) {
++		tactical_boot(board_name, version, line1, line2);
++		return;
++	}
+ #endif
+ 	int w = gfx_width(), h = gfx_height();
+ 	const ui_layout_t *L = &ui_layout;
+@@ -3122,8 +3328,8 @@ void ui_draw_home(const radio_view_t *v, const ui_state_t *s)
+ 	}
+ 	color_t fg = ui_col.fg, dim = ui_col.dim, chnum = ui_col.chnum;
+ 	color_t c = acc[a];
+-	// Light and Pink are light backgrounds. A darker tint keeps the chosen hue legible on both.
+-	if (ui_theme == 1 || (kawaii() && ui_theme != 2))
++	// Light and Pink are light backgrounds (Tactical is dark whatever the theme). A darker tint keeps the chosen hue legible on both.
++	if ((ui_theme == 1 && !tactical()) || (kawaii() && ui_theme != 2))
+ 		c = RGB565((c >> 11) * 8u * 5u / 12u,
+ 			   ((c >> 5) & 63u) * 4u * 5u / 12u, (c & 31u) * 8u * 5u / 12u);
+ 	ui_col.fg = ui_col.dim = ui_col.chnum = c;
+diff --git a/core/ui/ui_svc.h b/core/ui/ui_svc.h
+index 5fc1c7b..fda244a 100644
+--- a/core/ui/ui_svc.h
++++ b/core/ui/ui_svc.h
+@@ -468,7 +468,7 @@ typedef enum {
+ } ui_setting_t;
+ 
+ // UI_SET_CLASSIC_STYLE values. Keep the stored values for Pink and RadioFoundry.
+-enum { UI_STYLE_PINK, UI_STYLE_RADIOFOUNDRY, UI_STYLE_CENTERED, UI_STYLE_COUNT };
++enum { UI_STYLE_PINK, UI_STYLE_RADIOFOUNDRY, UI_STYLE_CENTERED, UI_STYLE_TACTICAL, UI_STYLE_FIELD, UI_STYLE_COUNT };
+ 
+ // UI_SET_ACCENT values: the theme's own highlight (blue), or one of seven. Color displays only
+ enum {
