@@ -143,10 +143,10 @@ index e6f3e78..ec52fe9 100644
  msgctxt "SET_VALUE_THEME_DARK"
  msgid "Dark"
 diff --git a/core/ui/ui_menus.c b/core/ui/ui_menus.c
-index 11479dc..75a34c9 100644
+index 11479dc..cfd545a 100644
 --- a/core/ui/ui_menus.c
 +++ b/core/ui/ui_menus.c
-@@ -7971,19 +7971,22 @@ static const tr_id_t n_backlight[] = { TRX(SET_VALUE_BACKLIGHT_5S_20S, "5s/20s")
+@@ -7971,19 +7971,26 @@ static const tr_id_t n_backlight[] = { TRX(SET_VALUE_BACKLIGHT_5S_20S, "5s/20s")
  };
  #if CONFIG_UI_COLOR
  #if CONFIG_UI_KAWAII
@@ -173,11 +173,15 @@ index 11479dc..75a34c9 100644
 +	TRN(SET_VALUE_LAYOUT_ROWS, "Rows"),
 +	TRN(SET_VALUE_LAYOUT_GRID, "Grid"),
 +	TRN(SET_VALUE_THEME_HIGH_CONTRAST, "High contrast") };
++// Highlight color in the tactical styles: their own mixes in the same slots (ui_screens.c tac_mix), named as kit
++static const tr_id_t n_accent_tac[] = { TRX(SET_VALUE_MIX_STANDARD, "Standard"), TRX(SET_VALUE_MIX_RED_LENS, "Red lens"),
++	TRX(SET_VALUE_MIX_AMBER_HUD, "Amber HUD"), TRX(SET_VALUE_MIX_SIGNAL, "Signal"), TRX(SET_VALUE_MIX_RANGER, "Ranger"),
++	TRX(SET_VALUE_MIX_ARCTIC, "Arctic"), TRX(SET_VALUE_MIX_COYOTE, "Coyote"), TRX(SET_VALUE_MIX_GHOST, "Ghost") };
 +#endif
  static const int16_t v_accent[] = { UI_ACCENT_DEFAULT, UI_ACCENT_RED, UI_ACCENT_ORANGE, UI_ACCENT_YELLOW, UI_ACCENT_TEAL,
  				     UI_ACCENT_BLUE, UI_ACCENT_PURPLE, UI_ACCENT_PINK };
  static const tr_id_t n_accent[] = { TRN(VALUE_DEFAULT, "Default"), TRN(SET_VALUE_ACCENT_RED, "Red"),
-@@ -8253,6 +8256,9 @@ static const set_item_t s_display[] = {
+@@ -8253,7 +8260,14 @@ static const set_item_t s_display[] = {
  		n_backlight),
  #if CONFIG_UI_COLOR	// a radio whose only screen is monochrome has no colors to set: no rows for them
  	LIST(TRN(SET_LABEL_THEME, "Theme"), "contrast", UI_SET_THEME, v_theme, n_theme),
@@ -185,9 +189,14 @@ index 11479dc..75a34c9 100644
 +	LIST(TRN(SET_LABEL_MENU_LAYOUT, "Menu layout"), "theme grid rows contrast", UI_SET_THEME, v_theme, n_layout),
 +#endif
  	LIST(TRN(SET_LABEL_HIGHLIGHT_COLOR, "Highlight color"), "accent", UI_SET_ACCENT, v_accent, n_accent),
++#if CONFIG_UI_KAWAII
++	LIST(TRN(SET_LABEL_HIGHLIGHT_COLOR, "Highlight color"), "accent mix red lens amber signal ranger arctic coyote ghost",
++		UI_SET_ACCENT, v_accent, n_accent_tac),
++#endif
  	TOGGLE(TRN(SET_LABEL_FILLED_STATUS_BAR, "Filled status bar"), "top line", UI_SET_STRIP),
  #endif
-@@ -8263,7 +8269,7 @@ static const set_item_t s_display[] = {
+ 	TOGGLE(TRN(SET_LABEL_LARGE_TEXT, "Large text"), "accessibility", UI_SET_LARGE_TEXT),
+@@ -8263,7 +8277,7 @@ static const set_item_t s_display[] = {
  		UI_SET_LABEL_FIRST),
  #endif
  #if CONFIG_UI_COLOR && CONFIG_UI_KAWAII
@@ -196,18 +205,34 @@ index 11479dc..75a34c9 100644
  		v_style, n_style),
  	TOGGLE(TRN(SET_LABEL_LARGE_CHANNEL_NAME, "Large channel name"), "Home Pink frequency name", UI_SET_HOME_NAME_FIRST),
  #endif
-@@ -8515,6 +8521,9 @@ static bool set_hidden(const set_item_t *s)
+@@ -8515,6 +8529,11 @@ static bool set_hidden(const set_item_t *s)
  		return !ui_style_available();
  	if (s->type == ST_TOGGLE && s->id == UI_SET_HOME_NAME_FIRST)
  		return !ui_home_name_first_available();
 +	// Theme or Menu layout: one row for the one setting, by the style in use
 +	if (s->type == ST_LIST && s->id == UI_SET_THEME)
 +		return ui_style_tactical() != (s->names == n_layout);
++	if (s->type == ST_LIST && s->id == UI_SET_ACCENT)
++		return ui_style_tactical() != (s->names == n_accent_tac);
  #endif
  #if CONFIG_KEY_ASSIGN
  	if (s->type != ST_ACTION && s->id >= UI_SET_KEY_FIRST && s->id <= UI_SET_KEY_LAST) {
+@@ -8652,12 +8671,7 @@ static void set_value_text(const set_item_t *s, int32_t v, char *out, size_t len
+ 		sb_str(&b, v ? TR(VALUE_ON, "On") : TR(VALUE_OFF, "Off"));
+ 		break;
+ 	case ST_LIST:
+-#if CONFIG_UI_KAWAII
+-		if (s->id == UI_SET_THEME && v == 0 && ui_svc_setting_get(UI_SET_CLASSIC_STYLE) != 0) {
+-			sb_str(&b, TR(SET_VALUE_THEME_DARK, "Dark"));
+-			break;
+-		}
+-#endif
++		// (Theme 0 needed "Dark" in place of "Pink" here while Pink was a style; its own name is Dark now)
+ #if CONFIG_KEY_ASSIGN
+ 		{
+ 			const char *home = home_key_default(s->id, v);
 diff --git a/core/ui/ui_screens.c b/core/ui/ui_screens.c
-index d722143..7605689 100644
+index d722143..c10cfa4 100644
 --- a/core/ui/ui_screens.c
 +++ b/core/ui/ui_screens.c
 @@ -46,7 +46,7 @@ static bool ui_strip_fill;
@@ -230,7 +255,7 @@ index d722143..7605689 100644
  	if (ui_style != style) {
  		ui_style = style;
  		ui_layout_init();
-@@ -79,6 +79,52 @@ static bool centered_home(void)
+@@ -79,6 +79,67 @@ static bool centered_home(void)
  	return ui_style == UI_STYLE_CENTERED && ui_style_available();
  }
  
@@ -280,10 +305,25 @@ index d722143..7605689 100644
 +	return tactical();
 +}
 +
++// The tactical highlight mixes (Settings > Display > Highlight color in Tactical and Field Drab), one per UI_ACCENT_*
++// slot so the saved setting is the same number: the filled strip, the focus row and Home's channel number, each a
++// light shade under the style's dark text (at least 7:1), and the strip's warnings, dark (at least 5:1).
++// Standard (UI_ACCENT_DEFAULT) is the style's own
++typedef struct { color_t strip, focus, chnum, warn; } tac_mix_t;
++static const tac_mix_t tac_mix[UI_ACCENT_COUNT] = {
++	[UI_ACCENT_RED] = { RGB565(248, 128, 112), RGB565(248, 128, 112), RGB565(248, 128, 112), RGB565(0, 32, 120) },	// Red lens
++	[UI_ACCENT_ORANGE] = { RGB565(248, 192, 64), RGB565(248, 192, 64), RGB565(248, 192, 64), RGB565(96, 40, 0) },	// Amber HUD
++	[UI_ACCENT_YELLOW] = { RGB565(248, 152, 64), RGB565(248, 152, 64), RGB565(248, 152, 64), RGB565(0, 40, 152) },	// Signal
++	[UI_ACCENT_TEAL] = { RGB565(152, 200, 112), RGB565(200, 168, 104), RGB565(152, 200, 112), RGB565(96, 40, 0) },	// Ranger
++	[UI_ACCENT_BLUE] = { RGB565(232, 240, 240), RGB565(144, 200, 248), RGB565(144, 200, 248), RGB565(128, 64, 0) },	// Arctic
++	[UI_ACCENT_PURPLE] = { RGB565(200, 168, 104), RGB565(200, 168, 104), RGB565(200, 168, 104), RGB565(88, 36, 0) },	// Coyote
++	[UI_ACCENT_PINK] = { RGB565(176, 184, 184), RGB565(232, 240, 240), RGB565(232, 240, 240), RGB565(96, 40, 0) },	// Ghost
++};
++
  bool ui_home_name_first_available(void)
  {
  	return kawaii();
-@@ -161,9 +207,145 @@ static void kawaii_boot(const char *board_name, const char *version, const char
+@@ -161,9 +222,145 @@ static void kawaii_boot(const char *board_name, const char *version, const char
  	sb_str(&b, version);
  	kawaii_center(ui_layout.tiny, h - ui_layout.tiny->h - 2, foot, ROSE_INK);
  }
@@ -429,7 +469,7 @@ index d722143..7605689 100644
  #endif
  
  static const color_t acc[UI_ACCENT_COUNT] = {
-@@ -210,7 +392,7 @@ static void accent_apply(void)
+@@ -210,7 +407,7 @@ static void accent_apply(void)
  	if (a != UI_ACCENT_DEFAULT) {
  		ui_col.focus = c;
  		ui_col.focus_fg = RGB565(0, 0, 0);
@@ -438,22 +478,24 @@ index d722143..7605689 100644
  	}
  #if CONFIG_UI_KAWAII
  	if (kawaii() && ui_theme != 2 && (a == UI_ACCENT_DEFAULT || a == UI_ACCENT_PINK)) {
-@@ -219,6 +401,14 @@ static void accent_apply(void)
+@@ -219,6 +416,16 @@ static void accent_apply(void)
  		ui_col.chnum = ROSE_ACCENT;
  		ui_col.strip_warn = ROSE_INK;
  	}
-+	if (tactical() && ui_theme != 2 && a == UI_ACCENT_DEFAULT) {
++	if (tactical() && ui_theme != 2) {
 +		const tac_pal_t *p = tac_pal();
-+		ui_col.strip_bg = p->strip_bg;
-+		ui_col.strip_warn = p->strip_warn;
-+		ui_col.focus = p->focus;		// the focus row in reverse video
++		const tac_mix_t *m = &tac_mix[a];
++		bool own = a == UI_ACCENT_DEFAULT;
++		ui_col.strip_bg = own ? p->strip_bg : m->strip;
++		ui_col.strip_warn = own ? p->strip_warn : m->warn;
++		ui_col.focus = own ? p->focus : m->focus;	// the focus row in reverse video
 +		ui_col.focus_fg = p->bg;
-+		ui_col.chnum = p->chnum;
++		ui_col.chnum = own ? p->chnum : m->chnum;
 +	}
  #endif
  }
  
-@@ -282,6 +472,23 @@ void ui_theme_set(uint8_t theme)
+@@ -282,6 +489,23 @@ void ui_theme_set(uint8_t theme)
  		ui_col.hint_bg = ROSE_SOFT;
  		ui_col.priv = ROSE_ACCENT;
  	}
@@ -477,7 +519,7 @@ index d722143..7605689 100644
  #endif
  	accent_apply();
  }
-@@ -1245,6 +1452,10 @@ void ui_draw_splash(const char *board_name, const char *version, const char *lin
+@@ -1245,6 +1469,10 @@ void ui_draw_splash(const char *board_name, const char *version, const char *lin
  		kawaii_boot(board_name, version, line1, line2);
  		return;
  	}
@@ -488,7 +530,7 @@ index d722143..7605689 100644
  #endif
  	int w = gfx_width(), h = gfx_height();
  	const ui_layout_t *L = &ui_layout;
-@@ -3122,8 +3333,8 @@ void ui_draw_home(const radio_view_t *v, const ui_state_t *s)
+@@ -3122,8 +3350,8 @@ void ui_draw_home(const radio_view_t *v, const ui_state_t *s)
  	}
  	color_t fg = ui_col.fg, dim = ui_col.dim, chnum = ui_col.chnum;
  	color_t c = acc[a];
@@ -499,7 +541,7 @@ index d722143..7605689 100644
  		c = RGB565((c >> 11) * 8u * 5u / 12u,
  			   ((c >> 5) & 63u) * 4u * 5u / 12u, (c & 31u) * 8u * 5u / 12u);
  	ui_col.fg = ui_col.dim = ui_col.chnum = c;
-@@ -4186,6 +4397,72 @@ static void kawaii_grid(const ui_list_t *l, int y, int bottom)
+@@ -4186,6 +4414,72 @@ static void kawaii_grid(const ui_list_t *l, int y, int bottom)
  	if (top + capacity < l->count)
  		gfx_fill(w - 3, bottom - 4, 3, 3, ui_col.priv);
  }
@@ -572,7 +614,7 @@ index d722143..7605689 100644
  #endif
  
  void ui_draw_list(const radio_view_t *v, const ui_state_t *s, const ui_list_t *l)
-@@ -4202,8 +4479,11 @@ void ui_draw_list(const radio_view_t *v, const ui_state_t *s, const ui_list_t *l
+@@ -4202,8 +4496,11 @@ void ui_draw_list(const radio_view_t *v, const ui_state_t *s, const ui_list_t *l
  		row_h += 6;
  #endif
  #if CONFIG_UI_KAWAII
