@@ -143,18 +143,21 @@ index e6f3e78..ec52fe9 100644
  msgctxt "SET_VALUE_THEME_DARK"
  msgid "Dark"
 diff --git a/core/ui/ui_menus.c b/core/ui/ui_menus.c
-index 11479dc..b698896 100644
+index 11479dc..5ecbd66 100644
 --- a/core/ui/ui_menus.c
 +++ b/core/ui/ui_menus.c
-@@ -7971,19 +7971,30 @@ static const tr_id_t n_backlight[] = { TRX(SET_VALUE_BACKLIGHT_5S_20S, "5s/20s")
+@@ -7971,19 +7971,45 @@ static const tr_id_t n_backlight[] = { TRX(SET_VALUE_BACKLIGHT_5S_20S, "5s/20s")
  };
  #if CONFIG_UI_COLOR
  #if CONFIG_UI_KAWAII
 -static const int16_t v_style[] = { UI_STYLE_PINK, UI_STYLE_RADIOFOUNDRY, UI_STYLE_CENTERED };
 -static const tr_id_t n_style[] = { TRN(SET_VALUE_ACCENT_PINK, "Pink"), TRX(SET_VALUE_STYLE_CLASSIC, "RadioFoundry"),
 -	TRN(SET_VALUE_STYLE_CENTERED, "Centered Home") };
-+static const int16_t v_style[] = { UI_STYLE_TACTICAL, UI_STYLE_FIELD, UI_STYLE_RADIOFOUNDRY, UI_STYLE_CENTERED };
++static const int16_t v_style[] = { UI_STYLE_TACTICAL, UI_STYLE_FIELD, UI_STYLE_AVIONICS, UI_STYLE_THERMAL, UI_STYLE_PANEL,
++				    UI_STYLE_RADIOFOUNDRY, UI_STYLE_CENTERED };
 +static const tr_id_t n_style[] = { TRN(SET_VALUE_STYLE_TACTICAL, "Tactical"), TRN(SET_VALUE_STYLE_FIELD, "Field Drab"),
++	TRX(SET_VALUE_STYLE_AVIONICS, "Avionics"), TRX(SET_VALUE_STYLE_THERMAL, "Thermal"),
++	TRX(SET_VALUE_STYLE_PANEL, "Instrument panel"),
 +	TRX(SET_VALUE_STYLE_CLASSIC, "RadioFoundry"), TRN(SET_VALUE_STYLE_CENTERED, "Centered Home") };
  #endif
  static const int16_t v_theme[] = { 0, 1, 2 };
@@ -173,19 +176,41 @@ index 11479dc..b698896 100644
 +	TRN(SET_VALUE_LAYOUT_ROWS, "Rows"),
 +	TRN(SET_VALUE_LAYOUT_GRID, "Grid"),
 +	TRN(SET_VALUE_THEME_HIGH_CONTRAST, "High contrast") };
-+// Variant in the tactical styles: a whole palette each (ui_screens.c tac_nvg, tac_field), stored in the highlight color
-+static const int16_t v_variant[] = { UI_ACCENT_DEFAULT, UI_ACCENT_RED, UI_ACCENT_ORANGE, UI_ACCENT_YELLOW, UI_ACCENT_TEAL };
++// Variant in the tactical styles: a whole palette each (ui_screens.c tac_styles), stored in the highlight color.
++// Each style's row takes as many of these values as it has names (VARIANTS)
++static const int16_t v_variant[] = { 0, 1, 2, 3, 4, 5, 6, 7 };
 +static const tr_id_t n_variant_nvg[] = { TRX(SET_VALUE_VARIANT_WHITE_PHOSPHOR, "White phosphor"),
 +	TRX(SET_VALUE_VARIANT_GREEN_PHOSPHOR, "Green phosphor"), TRX(SET_VALUE_VARIANT_RED_NIGHT, "Red night"),
 +	TRX(SET_VALUE_VARIANT_AMBER_PHOSPHOR, "Amber phosphor"), TRX(SET_VALUE_VARIANT_CYAN_HUD, "Cyan HUD") };
 +static const tr_id_t n_variant_field[] = { TRX(SET_VALUE_VARIANT_ARMY_GREEN, "Army green"),
 +	TRX(SET_VALUE_VARIANT_NAVY, "Navy"), TRX(SET_VALUE_VARIANT_DESERT, "Desert"),
-+	TRX(SET_VALUE_VARIANT_MULTICAM, "Multicam"), TRX(SET_VALUE_VARIANT_URBAN, "Urban") };
++	TRX(SET_VALUE_VARIANT_MULTICAM, "Multicam"), TRX(SET_VALUE_VARIANT_URBAN, "Urban"),
++	TRX(SET_VALUE_VARIANT_WOODLAND, "Woodland"), TRX(SET_VALUE_VARIANT_MARPAT, "MARPAT"),
++	TRX(SET_VALUE_VARIANT_TIGER_STRIPE, "Tiger stripe") };
++static const tr_id_t n_variant_avionics[] = { TRX(SET_VALUE_VARIANT_NIGHT_MFD, "Night MFD"),
++	TRX(SET_VALUE_VARIANT_DAY_MFD, "Day MFD"), TRX(SET_VALUE_VARIANT_HUD_GREEN, "HUD green"),
++	TRX(SET_VALUE_VARIANT_RADAR, "Radar") };
++static const tr_id_t n_variant_thermal[] = { TRX(SET_VALUE_VARIANT_WHITE_HOT, "White hot"),
++	TRX(SET_VALUE_VARIANT_IRONBOW, "Ironbow"), TRX(SET_VALUE_VARIANT_ARCTIC, "Arctic"),
++	TRX(SET_VALUE_VARIANT_LAVA, "Lava") };
++static const tr_id_t n_variant_panel[] = { TRX(SET_VALUE_VARIANT_BLACK_PANEL, "Black panel"),
++	TRX(SET_VALUE_VARIANT_OD_PANEL, "OD panel"), TRX(SET_VALUE_VARIANT_TAN_PANEL, "Tan panel"),
++	TRX(SET_VALUE_VARIANT_GUNMETAL, "Gunmetal") };
 +#endif
  static const int16_t v_accent[] = { UI_ACCENT_DEFAULT, UI_ACCENT_RED, UI_ACCENT_ORANGE, UI_ACCENT_YELLOW, UI_ACCENT_TEAL,
  				     UI_ACCENT_BLUE, UI_ACCENT_PURPLE, UI_ACCENT_PINK };
  static const tr_id_t n_accent[] = { TRN(VALUE_DEFAULT, "Default"), TRN(SET_VALUE_ACCENT_RED, "Red"),
-@@ -8253,7 +8264,16 @@ static const set_item_t s_display[] = {
+@@ -8173,6 +8199,9 @@ static const tr_id_t n_ptype[] = { TRN(VALUE_OFF, "Off"), TRX(VALUE_MOTOROLA, "M
+ #define TOGGLE(nm, syn_, sid) { nm, syn_, ST_TOGGLE, sid, 0, { { 0, 1, 1, NULL } } }
+ #define NUMBER(nm, syn_, sid, lo, hi, st, u) { nm, syn_, ST_NUMBER, sid, 0, { { lo, hi, st, u } } }
+ #define LIST(nm, syn_, sid, v, nms) { nm, syn_, ST_LIST, sid, sizeof v / sizeof v[0], { .values = v, .names = nms } }
++// A tactical style's Variant row: as many of v_variant as it has names
++#define VARIANTS(syn_, nms) { TRX(SET_LABEL_VARIANT, "Variant"), "accent highlight color variant " syn_, ST_LIST, \
++	UI_SET_ACCENT, sizeof nms / sizeof nms[0], { .values = v_variant, .names = nms } }
+ #define ACTION(nm, syn_, a) { nm, syn_, ST_ACTION, a, 0, { { 0, 0, 0, NULL } } }
+ 
+ static const int16_t v_zone_scan_dwell[] = { 25, 50, 75, 100, 150, 250, 500 };
+@@ -8253,7 +8282,17 @@ static const set_item_t s_display[] = {
  		n_backlight),
  #if CONFIG_UI_COLOR	// a radio whose only screen is monochrome has no colors to set: no rows for them
  	LIST(TRN(SET_LABEL_THEME, "Theme"), "contrast", UI_SET_THEME, v_theme, n_theme),
@@ -194,15 +219,16 @@ index 11479dc..b698896 100644
 +#endif
  	LIST(TRN(SET_LABEL_HIGHLIGHT_COLOR, "Highlight color"), "accent", UI_SET_ACCENT, v_accent, n_accent),
 +#if CONFIG_UI_KAWAII
-+	LIST(TRX(SET_LABEL_VARIANT, "Variant"), "accent highlight color phosphor white green red night amber cyan hud",
-+		UI_SET_ACCENT, v_variant, n_variant_nvg),
-+	LIST(TRX(SET_LABEL_VARIANT, "Variant"), "accent highlight color army green navy desert multicam urban camo",
-+		UI_SET_ACCENT, v_variant, n_variant_field),
++	VARIANTS("phosphor white green red night amber cyan hud", n_variant_nvg),
++	VARIANTS("army green navy desert multicam urban woodland marpat tiger stripe camo", n_variant_field),
++	VARIANTS("avionics mfd hud radar cockpit", n_variant_avionics),
++	VARIANTS("thermal flir white hot ironbow arctic lava", n_variant_thermal),
++	VARIANTS("instrument panel black od tan gunmetal", n_variant_panel),
 +#endif
  	TOGGLE(TRN(SET_LABEL_FILLED_STATUS_BAR, "Filled status bar"), "top line", UI_SET_STRIP),
  #endif
  	TOGGLE(TRN(SET_LABEL_LARGE_TEXT, "Large text"), "accessibility", UI_SET_LARGE_TEXT),
-@@ -8263,7 +8283,7 @@ static const set_item_t s_display[] = {
+@@ -8263,7 +8302,7 @@ static const set_item_t s_display[] = {
  		UI_SET_LABEL_FIRST),
  #endif
  #if CONFIG_UI_COLOR && CONFIG_UI_KAWAII
@@ -211,7 +237,29 @@ index 11479dc..b698896 100644
  		v_style, n_style),
  	TOGGLE(TRN(SET_LABEL_LARGE_CHANNEL_NAME, "Large channel name"), "Home Pink frequency name", UI_SET_HOME_NAME_FIRST),
  #endif
-@@ -8515,6 +8535,15 @@ static bool set_hidden(const set_item_t *s)
+@@ -8504,6 +8543,21 @@ static uint16_t hwopt_visible(void)
+ 
+ // Settings a radio without a battery (or a broadcast receiver, or the key) doesn't have are left out of the list, not
+ // shown disabled
++#if CONFIG_UI_KAWAII
++// The names the Highlight color / Variant row shows in the style in use
++static const tr_id_t *accent_names(void)
++{
++	switch (ui_style_tactical() ? ui_svc_setting_get(UI_SET_CLASSIC_STYLE) : -1) {
++	case UI_STYLE_TACTICAL: return n_variant_nvg;
++	case UI_STYLE_FIELD: return n_variant_field;
++	case UI_STYLE_AVIONICS: return n_variant_avionics;
++	case UI_STYLE_THERMAL: return n_variant_thermal;
++	case UI_STYLE_PANEL: return n_variant_panel;
++	default: return n_accent;
++	}
++}
++#endif
++
+ static bool set_hidden(const set_item_t *s)
+ {
+ #if RFOUNDRY_HWOPTS
+@@ -8515,6 +8569,12 @@ static bool set_hidden(const set_item_t *s)
  		return !ui_style_available();
  	if (s->type == ST_TOGGLE && s->id == UI_SET_HOME_NAME_FIRST)
  		return !ui_home_name_first_available();
@@ -219,15 +267,12 @@ index 11479dc..b698896 100644
 +	if (s->type == ST_LIST && s->id == UI_SET_THEME)
 +		return ui_style_tactical() != (s->names == n_layout);
 +	// Highlight color, or the variants of the tactical style in use
-+	if (s->type == ST_LIST && s->id == UI_SET_ACCENT) {
-+		int st = ui_style_tactical() ? ui_svc_setting_get(UI_SET_CLASSIC_STYLE) : -1;
-+		const tr_id_t *want = st == UI_STYLE_TACTICAL ? n_variant_nvg : st == UI_STYLE_FIELD ? n_variant_field : n_accent;
-+		return s->names != want;
-+	}
++	if (s->type == ST_LIST && s->id == UI_SET_ACCENT)
++		return s->names != accent_names();
  #endif
  #if CONFIG_KEY_ASSIGN
  	if (s->type != ST_ACTION && s->id >= UI_SET_KEY_FIRST && s->id <= UI_SET_KEY_LAST) {
-@@ -8652,12 +8681,7 @@ static void set_value_text(const set_item_t *s, int32_t v, char *out, size_t len
+@@ -8652,12 +8712,7 @@ static void set_value_text(const set_item_t *s, int32_t v, char *out, size_t len
  		sb_str(&b, v ? TR(VALUE_ON, "On") : TR(VALUE_OFF, "Off"));
  		break;
  	case ST_LIST:
@@ -241,8 +286,21 @@ index 11479dc..b698896 100644
  #if CONFIG_KEY_ASSIGN
  		{
  			const char *home = home_key_default(s->id, v);
+@@ -8673,6 +8728,12 @@ static void set_value_text(const set_item_t *s, int32_t v, char *out, size_t len
+ 				return;
+ 			}
+ 		}
++#if CONFIG_UI_KAWAII
++		if (s->id == UI_SET_ACCENT && s->values == v_variant) {
++			sb_str(&b, tr(s->names[0]));	// a variant this style lacks shows (and draws) its first
++			return;
++		}
++#endif
+ 		sb_i32(&b, v);
+ 		break;
+ 	case ST_NUMBER:
 diff --git a/core/ui/ui_screens.c b/core/ui/ui_screens.c
-index d722143..a5818df 100644
+index d722143..aedf81d 100644
 --- a/core/ui/ui_screens.c
 +++ b/core/ui/ui_screens.c
 @@ -46,7 +46,7 @@ static bool ui_strip_fill;
@@ -265,7 +323,7 @@ index d722143..a5818df 100644
  	if (ui_style != style) {
  		ui_style = style;
  		ui_layout_init();
-@@ -79,6 +79,94 @@ static bool centered_home(void)
+@@ -79,6 +79,190 @@ static bool centered_home(void)
  	return ui_style == UI_STYLE_CENTERED && ui_style_available();
  }
  
@@ -275,76 +333,172 @@ index d722143..a5818df 100644
 +	color_t bg, fg, dim, line, tx, rx, warn, idle, hint_bg, priv;
 +	color_t strip_bg, strip_warn;	// the filled status strip (its text is bg)
 +	color_t focus, chnum;		// the focus row (its text is bg), Home's channel number
-+	bool badge;			// boot emblem: a unit badge, else a reticle
++	uint8_t emblem;			// the boot emblem, TAC_EM_*
 +} tac_pal_t;
++enum { TAC_EM_RETICLE, TAC_EM_BADGE, TAC_EM_HORIZON, TAC_EM_SIGHT, TAC_EM_DIAL };
 +
 +// The variants (Settings > Display > Variant), stored in the highlight color setting: UI_ACCENT_DEFAULT is the first.
 +// Text on the background at least 6:1 except Red night, kept dim on purpose
-+#define TAC_VARIANTS 5
 +// Tactical: night vision and phosphor displays
-+static const tac_pal_t tac_nvg[TAC_VARIANTS] = {
++static const tac_pal_t tac_nvg[] = {
 +	// White phosphor: blue-green white, as a white phosphor tube; TX stays red-orange, the one warm color
 +	{ .bg = RGB565(8, 16, 16), .fg = RGB565(216, 248, 240), .dim = RGB565(136, 176, 176), .line = RGB565(40, 64, 64),
 +	  .tx = RGB565(200, 48, 24), .rx = RGB565(160, 240, 248), .warn = RGB565(248, 216, 112), .idle = RGB565(88, 120, 120),
 +	  .hint_bg = RGB565(20, 36, 36), .priv = RGB565(120, 200, 248), .strip_bg = RGB565(136, 176, 176), .strip_warn = RGB565(96, 40, 0),
-+	  .focus = RGB565(216, 248, 240), .chnum = RGB565(160, 240, 248), .badge = false },
++	  .focus = RGB565(216, 248, 240), .chnum = RGB565(160, 240, 248), .emblem = TAC_EM_RETICLE },
 +	// Green phosphor: the old green-on-black terminal (P1); RX a yellower green, TX red-orange
 +	{ .bg = RGB565(0, 12, 0), .fg = RGB565(136, 248, 112), .dim = RGB565(72, 184, 64), .line = RGB565(16, 64, 16),
 +	  .tx = RGB565(232, 72, 32), .rx = RGB565(208, 248, 120), .warn = RGB565(248, 216, 64), .idle = RGB565(48, 120, 40),
 +	  .hint_bg = RGB565(8, 32, 8), .priv = RGB565(152, 232, 200), .strip_bg = RGB565(72, 184, 64), .strip_warn = RGB565(88, 24, 0),
-+	  .focus = RGB565(136, 248, 112), .chnum = RGB565(208, 248, 120), .badge = false },
++	  .focus = RGB565(136, 248, 112), .chnum = RGB565(208, 248, 120), .emblem = TAC_EM_RETICLE },
 +	// Red night: red-light discipline, nothing that kills dark adaptation; TX is the one hot white so it still stands out
 +	{ .bg = RGB565(16, 0, 0), .fg = RGB565(248, 96, 72), .dim = RGB565(208, 64, 48), .line = RGB565(72, 16, 16),
 +	  .tx = RGB565(248, 232, 200), .rx = RGB565(248, 152, 112), .warn = RGB565(248, 184, 64), .idle = RGB565(128, 36, 24),
 +	  .hint_bg = RGB565(40, 8, 8), .priv = RGB565(248, 128, 160), .strip_bg = RGB565(208, 64, 48), .strip_warn = RGB565(64, 16, 0),
-+	  .focus = RGB565(248, 96, 72), .chnum = RGB565(248, 152, 112), .badge = false },
++	  .focus = RGB565(248, 96, 72), .chnum = RGB565(248, 152, 112), .emblem = TAC_EM_RETICLE },
 +	// Amber phosphor: the amber monochrome monitor (P3); RX pale, TX red
 +	{ .bg = RGB565(16, 8, 0), .fg = RGB565(248, 184, 64), .dim = RGB565(200, 136, 40), .line = RGB565(72, 40, 8),
 +	  .tx = RGB565(232, 48, 32), .rx = RGB565(248, 224, 144), .warn = RGB565(248, 120, 48), .idle = RGB565(120, 80, 24),
 +	  .hint_bg = RGB565(40, 24, 4), .priv = RGB565(248, 152, 112), .strip_bg = RGB565(200, 136, 40), .strip_warn = RGB565(80, 24, 0),
-+	  .focus = RGB565(248, 184, 64), .chnum = RGB565(248, 224, 144), .badge = false },
++	  .focus = RGB565(248, 184, 64), .chnum = RGB565(248, 224, 144), .emblem = TAC_EM_RETICLE },
 +	// Cyan HUD: cockpit head-up display blue; RX aqua green
 +	{ .bg = RGB565(0, 8, 20), .fg = RGB565(160, 232, 248), .dim = RGB565(96, 160, 200), .line = RGB565(24, 48, 72),
 +	  .tx = RGB565(232, 64, 40), .rx = RGB565(120, 248, 200), .warn = RGB565(248, 208, 96), .idle = RGB565(56, 96, 128),
 +	  .hint_bg = RGB565(8, 24, 40), .priv = RGB565(168, 160, 248), .strip_bg = RGB565(96, 160, 200), .strip_warn = RGB565(88, 32, 0),
-+	  .focus = RGB565(160, 232, 248), .chnum = RGB565(120, 248, 200), .badge = false },
++	  .focus = RGB565(160, 232, 248), .chnum = RGB565(120, 248, 200), .emblem = TAC_EM_RETICLE },
 +};
 +
 +// Field Drab: uniform and camouflage patterns, each with a unit badge at boot
-+static const tac_pal_t tac_field[TAC_VARIANTS] = {
++static const tac_pal_t tac_field[] = {
 +	// Army green: tan stencil text on olive drab, coyote highlights
 +	{ .bg = RGB565(24, 28, 16), .fg = RGB565(224, 216, 184), .dim = RGB565(160, 148, 112), .line = RGB565(76, 80, 52),
 +	  .tx = RGB565(200, 56, 32), .rx = RGB565(168, 192, 80), .warn = RGB565(232, 160, 48), .idle = RGB565(120, 112, 80),
 +	  .hint_bg = RGB565(44, 48, 32), .priv = RGB565(144, 176, 208), .strip_bg = RGB565(224, 216, 184), .strip_warn = RGB565(120, 48, 0),
-+	  .focus = RGB565(200, 168, 104), .chnum = RGB565(200, 168, 104), .badge = true },
++	  .focus = RGB565(200, 168, 104), .chnum = RGB565(200, 168, 104), .emblem = TAC_EM_BADGE },
 +	// Navy: haze gray on navy blue, brass highlights
 +	{ .bg = RGB565(8, 16, 32), .fg = RGB565(216, 224, 232), .dim = RGB565(136, 152, 176), .line = RGB565(40, 56, 88),
 +	  .tx = RGB565(216, 56, 40), .rx = RGB565(120, 200, 232), .warn = RGB565(240, 184, 72), .idle = RGB565(88, 104, 136),
 +	  .hint_bg = RGB565(20, 32, 56), .priv = RGB565(168, 176, 232), .strip_bg = RGB565(216, 224, 232), .strip_warn = RGB565(120, 48, 0),
-+	  .focus = RGB565(232, 200, 104), .chnum = RGB565(232, 200, 104), .badge = true },
++	  .focus = RGB565(232, 200, 104), .chnum = RGB565(232, 200, 104), .emblem = TAC_EM_BADGE },
 +	// Desert: sand on dark earth, khaki strip, coyote brown highlights
 +	{ .bg = RGB565(40, 32, 20), .fg = RGB565(240, 224, 192), .dim = RGB565(184, 160, 120), .line = RGB565(88, 72, 48),
 +	  .tx = RGB565(208, 56, 32), .rx = RGB565(176, 192, 112), .warn = RGB565(240, 168, 56), .idle = RGB565(136, 112, 80),
 +	  .hint_bg = RGB565(60, 48, 32), .priv = RGB565(152, 184, 208), .strip_bg = RGB565(216, 192, 144), .strip_warn = RGB565(112, 40, 0),
-+	  .focus = RGB565(208, 144, 80), .chnum = RGB565(208, 144, 80), .badge = true },
++	  .focus = RGB565(208, 144, 80), .chnum = RGB565(208, 144, 80), .emblem = TAC_EM_BADGE },
 +	// Multicam: tan text, a field green strip and tan-brown highlights on dark brown-green, the pattern's three tones
 +	{ .bg = RGB565(32, 30, 22), .fg = RGB565(232, 216, 180), .dim = RGB565(168, 156, 116), .line = RGB565(80, 76, 56),
 +	  .tx = RGB565(208, 56, 32), .rx = RGB565(160, 184, 104), .warn = RGB565(232, 160, 48), .idle = RGB565(120, 108, 80),
 +	  .hint_bg = RGB565(52, 48, 36), .priv = RGB565(144, 168, 184), .strip_bg = RGB565(160, 184, 104), .strip_warn = RGB565(96, 32, 0),
-+	  .focus = RGB565(208, 168, 120), .chnum = RGB565(176, 196, 120), .badge = true },
++	  .focus = RGB565(208, 168, 120), .chnum = RGB565(176, 196, 120), .emblem = TAC_EM_BADGE },
 +	// Urban: concrete grays with a steel highlight, as urban camouflage
 +	{ .bg = RGB565(20, 22, 24), .fg = RGB565(216, 216, 208), .dim = RGB565(152, 152, 144), .line = RGB565(64, 64, 64),
 +	  .tx = RGB565(216, 56, 40), .rx = RGB565(152, 208, 168), .warn = RGB565(232, 176, 64), .idle = RGB565(104, 104, 100),
 +	  .hint_bg = RGB565(36, 38, 40), .priv = RGB565(152, 176, 216), .strip_bg = RGB565(176, 180, 172), .strip_warn = RGB565(112, 40, 0),
-+	  .focus = RGB565(184, 200, 216), .chnum = RGB565(184, 200, 216), .badge = true },
++	  .focus = RGB565(184, 200, 216), .chnum = RGB565(184, 200, 216), .emblem = TAC_EM_BADGE },
++	// Woodland: the four M81 tones: light green text, tan labels, a green strip and brown highlights on black
++	{ .bg = RGB565(16, 20, 12), .fg = RGB565(200, 216, 160), .dim = RGB565(168, 152, 112), .line = RGB565(72, 56, 40),
++	  .tx = RGB565(208, 56, 32), .rx = RGB565(176, 208, 120), .warn = RGB565(232, 160, 48), .idle = RGB565(112, 104, 72),
++	  .hint_bg = RGB565(40, 32, 24), .priv = RGB565(144, 176, 200), .strip_bg = RGB565(112, 144, 72), .strip_warn = RGB565(64, 24, 0),
++	  .focus = RGB565(160, 116, 72), .chnum = RGB565(176, 208, 120), .emblem = TAC_EM_BADGE },
++	// MARPAT: digital woodland: tan text, light green labels, a coyote strip and green highlights
++	{ .bg = RGB565(22, 26, 18), .fg = RGB565(216, 204, 168), .dim = RGB565(160, 172, 120), .line = RGB565(80, 90, 56),
++	  .tx = RGB565(208, 56, 32), .rx = RGB565(184, 208, 136), .warn = RGB565(232, 160, 48), .idle = RGB565(116, 116, 84),
++	  .hint_bg = RGB565(48, 40, 28), .priv = RGB565(144, 168, 200), .strip_bg = RGB565(176, 156, 108), .strip_warn = RGB565(88, 32, 0),
++	  .focus = RGB565(128, 160, 88), .chnum = RGB565(200, 216, 152), .emblem = TAC_EM_BADGE },
++	// Tiger stripe: jungle: khaki text, a deep green strip and burnt brown highlights on near-black
++	{ .bg = RGB565(12, 14, 8), .fg = RGB565(224, 208, 144), .dim = RGB565(160, 168, 104), .line = RGB565(64, 72, 32),
++	  .tx = RGB565(216, 64, 32), .rx = RGB565(184, 200, 96), .warn = RGB565(240, 168, 48), .idle = RGB565(112, 112, 64),
++	  .hint_bg = RGB565(32, 36, 16), .priv = RGB565(144, 176, 200), .strip_bg = RGB565(120, 144, 56), .strip_warn = RGB565(48, 16, 0),
++	  .focus = RGB565(184, 128, 64), .chnum = RGB565(224, 208, 144), .emblem = TAC_EM_BADGE },
++};
++
++// Avionics: cockpit displays, an attitude indicator at boot
++static const tac_pal_t tac_avionics[] = {
++	// Night MFD: glass cockpit symbology: white text, cyan labels and strip, magenta selection, green numbers
++	{ .bg = RGB565(4, 6, 10), .fg = RGB565(232, 240, 248), .dim = RGB565(120, 200, 232), .line = RGB565(40, 56, 72),
++	  .tx = RGB565(248, 64, 48), .rx = RGB565(96, 232, 96), .warn = RGB565(248, 200, 40), .idle = RGB565(96, 112, 128),
++	  .hint_bg = RGB565(16, 20, 28), .priv = RGB565(232, 96, 232), .strip_bg = RGB565(120, 200, 232), .strip_warn = RGB565(112, 0, 112),
++	  .focus = RGB565(232, 96, 232), .chnum = RGB565(96, 232, 96), .emblem = TAC_EM_HORIZON },
++	// Day MFD: slate blue panel, white text, cyan selection and amber numbers
++	{ .bg = RGB565(16, 24, 40), .fg = RGB565(248, 248, 248), .dim = RGB565(168, 184, 200), .line = RGB565(56, 72, 96),
++	  .tx = RGB565(248, 64, 48), .rx = RGB565(96, 232, 96), .warn = RGB565(248, 200, 40), .idle = RGB565(104, 120, 144),
++	  .hint_bg = RGB565(28, 40, 60), .priv = RGB565(120, 200, 248), .strip_bg = RGB565(176, 192, 208), .strip_warn = RGB565(120, 48, 0),
++	  .focus = RGB565(120, 200, 232), .chnum = RGB565(248, 200, 40), .emblem = TAC_EM_HORIZON },
++	// HUD green: collimated head-up display: bright yellow-green on black
++	{ .bg = RGB565(2, 10, 4), .fg = RGB565(168, 255, 104), .dim = RGB565(96, 192, 72), .line = RGB565(24, 64, 16),
++	  .tx = RGB565(248, 96, 64), .rx = RGB565(224, 255, 176), .warn = RGB565(248, 232, 96), .idle = RGB565(56, 112, 40),
++	  .hint_bg = RGB565(8, 30, 8), .priv = RGB565(160, 248, 232), .strip_bg = RGB565(96, 192, 72), .strip_warn = RGB565(72, 32, 0),
++	  .focus = RGB565(168, 255, 104), .chnum = RGB565(224, 255, 176), .emblem = TAC_EM_HORIZON },
++	// Radar: scope green with an amber selection
++	{ .bg = RGB565(0, 12, 10), .fg = RGB565(200, 248, 216), .dim = RGB565(96, 200, 152), .line = RGB565(24, 72, 56),
++	  .tx = RGB565(248, 72, 48), .rx = RGB565(120, 248, 168), .warn = RGB565(248, 176, 48), .idle = RGB565(56, 120, 96),
++	  .hint_bg = RGB565(8, 32, 26), .priv = RGB565(160, 200, 248), .strip_bg = RGB565(96, 200, 152), .strip_warn = RGB565(72, 24, 0),
++	  .focus = RGB565(248, 176, 48), .chnum = RGB565(120, 248, 168), .emblem = TAC_EM_HORIZON },
++};
++
++// Thermal: sensor palettes, a sight at boot
++static const tac_pal_t tac_thermal[] = {
++	// White hot: grayscale sensor feed: white text, a red sight for TX, hot yellow for RX
++	{ .bg = RGB565(10, 10, 10), .fg = RGB565(232, 232, 232), .dim = RGB565(160, 160, 160), .line = RGB565(64, 64, 64),
++	  .tx = RGB565(248, 48, 32), .rx = RGB565(248, 200, 64), .warn = RGB565(248, 136, 40), .idle = RGB565(104, 104, 104),
++	  .hint_bg = RGB565(32, 32, 32), .priv = RGB565(176, 176, 200), .strip_bg = RGB565(200, 200, 200), .strip_warn = RGB565(128, 0, 0),
++	  .focus = RGB565(248, 248, 248), .chnum = RGB565(248, 200, 64), .emblem = TAC_EM_SIGHT },
++	// Ironbow: the classic thermal palette: deep purple, orange strip, yellow selection, white-hot text
++	{ .bg = RGB565(12, 0, 24), .fg = RGB565(248, 232, 200), .dim = RGB565(216, 120, 72), .line = RGB565(72, 24, 88),
++	  .tx = RGB565(248, 248, 248), .rx = RGB565(248, 200, 64), .warn = RGB565(248, 144, 48), .idle = RGB565(120, 56, 120),
++	  .hint_bg = RGB565(36, 8, 52), .priv = RGB565(200, 104, 200), .strip_bg = RGB565(216, 96, 56), .strip_warn = RGB565(48, 0, 64),
++	  .focus = RGB565(248, 200, 64), .chnum = RGB565(248, 232, 200), .emblem = TAC_EM_SIGHT },
++	// Arctic: cold blues fading to white, yellow for heat
++	{ .bg = RGB565(0, 8, 24), .fg = RGB565(232, 248, 248), .dim = RGB565(112, 176, 232), .line = RGB565(24, 48, 96),
++	  .tx = RGB565(248, 72, 40), .rx = RGB565(248, 232, 120), .warn = RGB565(248, 160, 64), .idle = RGB565(72, 104, 152),
++	  .hint_bg = RGB565(8, 24, 52), .priv = RGB565(160, 128, 248), .strip_bg = RGB565(112, 176, 232), .strip_warn = RGB565(96, 24, 0),
++	  .focus = RGB565(232, 248, 248), .chnum = RGB565(248, 232, 120), .emblem = TAC_EM_SIGHT },
++	// Lava: black through red and orange to yellow-white
++	{ .bg = RGB565(16, 4, 0), .fg = RGB565(248, 224, 160), .dim = RGB565(216, 112, 40), .line = RGB565(80, 24, 8),
++	  .tx = RGB565(248, 248, 248), .rx = RGB565(248, 216, 64), .warn = RGB565(248, 144, 32), .idle = RGB565(128, 56, 24),
++	  .hint_bg = RGB565(44, 12, 0), .priv = RGB565(248, 128, 128), .strip_bg = RGB565(216, 72, 24), .strip_warn = RGB565(56, 8, 0),
++	  .focus = RGB565(248, 176, 48), .chnum = RGB565(248, 224, 160), .emblem = TAC_EM_SIGHT },
++};
++
++// Instrument panel: radio faceplates, a dial at boot
++static const tac_pal_t tac_panel[] = {
++	// Black panel: a radio faceplate: stencil white on matte black, safety orange selection, green lamp for RX
++	{ .bg = RGB565(14, 14, 14), .fg = RGB565(240, 240, 232), .dim = RGB565(160, 160, 152), .line = RGB565(64, 64, 60),
++	  .tx = RGB565(224, 40, 24), .rx = RGB565(136, 208, 104), .warn = RGB565(248, 200, 40), .idle = RGB565(100, 100, 96),
++	  .hint_bg = RGB565(30, 30, 30), .priv = RGB565(136, 176, 232), .strip_bg = RGB565(224, 224, 216), .strip_warn = RGB565(120, 40, 0),
++	  .focus = RGB565(248, 128, 32), .chnum = RGB565(248, 128, 32), .emblem = TAC_EM_DIAL },
++	// OD panel: stencil white on olive drab, safety orange selection
++	{ .bg = RGB565(34, 40, 26), .fg = RGB565(236, 236, 224), .dim = RGB565(168, 172, 144), .line = RGB565(84, 92, 64),
++	  .tx = RGB565(224, 40, 24), .rx = RGB565(152, 216, 112), .warn = RGB565(248, 200, 40), .idle = RGB565(116, 120, 96),
++	  .hint_bg = RGB565(50, 58, 38), .priv = RGB565(144, 176, 216), .strip_bg = RGB565(224, 224, 212), .strip_warn = RGB565(120, 40, 0),
++	  .focus = RGB565(248, 128, 32), .chnum = RGB565(248, 128, 32), .emblem = TAC_EM_DIAL },
++	// Tan panel: stencil white on flat dark earth, safety orange selection
++	{ .bg = RGB565(54, 46, 32), .fg = RGB565(244, 236, 216), .dim = RGB565(196, 180, 148), .line = RGB565(104, 90, 66),
++	  .tx = RGB565(224, 40, 24), .rx = RGB565(168, 216, 120), .warn = RGB565(248, 200, 40), .idle = RGB565(140, 124, 96),
++	  .hint_bg = RGB565(72, 62, 44), .priv = RGB565(152, 184, 216), .strip_bg = RGB565(236, 224, 200), .strip_warn = RGB565(120, 40, 0),
++	  .focus = RGB565(248, 128, 32), .chnum = RGB565(248, 128, 32), .emblem = TAC_EM_DIAL },
++	// Gunmetal: steel gray, aviation yellow selection
++	{ .bg = RGB565(30, 34, 40), .fg = RGB565(232, 236, 240), .dim = RGB565(160, 168, 176), .line = RGB565(72, 80, 92),
++	  .tx = RGB565(224, 40, 24), .rx = RGB565(136, 216, 136), .warn = RGB565(248, 160, 40), .idle = RGB565(112, 120, 128),
++	  .hint_bg = RGB565(44, 50, 58), .priv = RGB565(144, 184, 232), .strip_bg = RGB565(200, 208, 216), .strip_warn = RGB565(112, 40, 0),
++	  .focus = RGB565(248, 200, 40), .chnum = RGB565(248, 200, 40), .emblem = TAC_EM_DIAL },
++};
++
++#define TAC_N(a) ((uint8_t)(sizeof a / sizeof a[0]))
++static const struct { uint8_t style, n; const tac_pal_t *v; } tac_styles[] = {
++	{ UI_STYLE_TACTICAL, TAC_N(tac_nvg), tac_nvg }, { UI_STYLE_FIELD, TAC_N(tac_field), tac_field },
++	{ UI_STYLE_AVIONICS, TAC_N(tac_avionics), tac_avionics }, { UI_STYLE_THERMAL, TAC_N(tac_thermal), tac_thermal },
++	{ UI_STYLE_PANEL, TAC_N(tac_panel), tac_panel },
 +};
 +
 +static const tac_pal_t *tac_pal(void)
 +{
 +	if (!ui_style_available())
 +		return NULL;
-+	uint8_t v = ui_accent < TAC_VARIANTS ? ui_accent : 0;
-+	return ui_style == UI_STYLE_TACTICAL ? &tac_nvg[v] : ui_style == UI_STYLE_FIELD ? &tac_field[v] : NULL;
++	for (unsigned i = 0; i < sizeof tac_styles / sizeof tac_styles[0]; i++)
++		if (tac_styles[i].style == ui_style)
++			return &tac_styles[i].v[ui_accent < tac_styles[i].n ? ui_accent : 0];	// a variant the style lacks: its first
++	return NULL;
 +}
 +
 +static bool tactical(void)
@@ -360,7 +514,7 @@ index d722143..a5818df 100644
  bool ui_home_name_first_available(void)
  {
  	return kawaii();
-@@ -161,9 +249,145 @@ static void kawaii_boot(const char *board_name, const char *version, const char
+@@ -161,9 +345,242 @@ static void kawaii_boot(const char *board_name, const char *version, const char
  	sb_str(&b, version);
  	kawaii_center(ui_layout.tiny, h - ui_layout.tiny->h - 2, foot, ROSE_INK);
  }
@@ -468,6 +622,100 @@ index d722143..a5818df 100644
 +	}
 +}
 +
++static void tac_disc(int cx, int cy, int r, color_t c)
++{
++	for (int y = -r; y <= r; y++) {
++		int x = 0;
++		while ((x + 1) * (x + 1) + y * y <= r * r)
++			x++;
++		gfx_hline(cx - x, cy + y, 2 * x + 1, c);
++	}
++}
++
++// Twelve points round a circle, sin and cos in 1/64ths, from 12 o'clock clockwise
++static const int8_t tac_sin12[12] = { 0, 32, 55, 64, 55, 32, 0, -32, -55, -64, -55, -32 };
++#define TAC_COS12(i) (tac_sin12[((i) + 3) % 12])
++
++// An attitude indicator: ground below the horizon, a pitch ladder, the bank scale on top and the aircraft symbol
++static void tac_horizon(const tac_pal_t *p, int cx, int cy, int r)
++{
++	for (int y = 1; y <= r; y++) {
++		int x = 0;
++		while ((x + 1) * (x + 1) + y * y <= r * r)
++			x++;
++		gfx_hline(cx - x, cy + y, 2 * x + 1, p->hint_bg);
++	}
++	tac_circle(cx, cy, r, p->dim);
++	tac_circle(cx, cy, r + 1, p->dim);
++	gfx_hline(cx - r + 1, cy, 2 * r - 1, p->fg);
++	for (int k = 1; k <= 2; k++) {
++		int d = k * r / 3, l = k == 1 ? r / 3 : r / 2;
++		gfx_hline(cx - l / 2, cy - d, l, p->dim);
++		gfx_hline(cx - l / 2, cy + d, l, p->dim);
++	}
++	for (int i = -2; i <= 2; i++) {	// the bank scale: 12 o'clock and two marks either side
++		int a = (12 + i) % 12, t = i == 0 ? 8 : 5;
++		for (int k = 0; k < t; k++)
++			gfx_pixel(cx + tac_sin12[a] * (r + 4 + k) / 64, cy - TAC_COS12(a) * (r + 4 + k) / 64, p->fg);
++	}
++	for (int t = 0; t < 3; t++) {	// the aircraft: two wings and a center dot
++		gfx_hline(cx - r * 2 / 3, cy + t - 1, r / 3, p->focus);
++		gfx_hline(cx + r / 3 + 1, cy + t - 1, r / 3, p->focus);
++		gfx_vline(cx - r / 3 + t - 2, cy, 6, p->focus);
++		gfx_vline(cx + r / 3 + t, cy, 6, p->focus);
++	}
++	tac_disc(cx, cy, 3, p->focus);
++}
++
++// A thermal sight: a hot spot in the sensor's colors, a broken crosshair and corner brackets
++static void tac_sight(const tac_pal_t *p, int cx, int cy, int r)
++{
++	int hx = cx + r / 5, hy = cy + r / 6;
++	tac_disc(hx, hy, r / 2, p->line);
++	tac_disc(hx, hy, r / 3, p->dim);
++	tac_disc(hx, hy, r / 5, p->rx);
++	tac_disc(hx, hy, r / 10, p->fg);
++	int gap = r / 5;
++	for (int t = -1; t <= 1; t++) {
++		gfx_vline(cx + t, cy - r, r - gap, p->focus);
++		gfx_vline(cx + t, cy + gap + 1, r - gap, p->focus);
++		gfx_hline(cx - r, cy + t, r - gap, p->focus);
++		gfx_hline(cx + gap + 1, cy + t, r - gap, p->focus);
++	}
++	for (int k = 1; k <= 3; k++) {	// stadia marks
++		gfx_hline(cx - 3, cy + gap + k * (r - gap) / 4, 7, p->fg);
++		gfx_vline(cx - gap - k * (r - gap) / 4, cy - 3, 7, p->fg);
++		gfx_vline(cx + gap + k * (r - gap) / 4, cy - 3, 7, p->fg);
++	}
++	tac_brackets(cx, cy, r + 4, r / 3, p->fg);
++	tac_brackets(cx, cy, r + 5, r / 3, p->fg);
++}
++
++// A faceplate dial: a knob with a pointer, twelve detents and four panel screws
++static void tac_dial(const tac_pal_t *p, int cx, int cy, int r)
++{
++	for (int i = 0; i < 12; i++) {
++		int t = i % 3 == 0 ? 7 : 4;
++		for (int k = 0; k < t; k++)
++			for (int w = 0; w < 2; w++)
++				gfx_pixel(cx + tac_sin12[i] * (r - k) / 64 + w, cy - TAC_COS12(i) * (r - k) / 64, i % 3 == 0 ? p->fg : p->dim);
++	}
++	int kr = r * 2 / 3;
++	tac_disc(cx, cy, kr, p->hint_bg);
++	tac_circle(cx, cy, kr, p->fg);
++	tac_circle(cx, cy, kr - 4, p->line);
++	for (int k = 6; k < kr - 2; k++)	// the pointer at ten o'clock
++		for (int w = -1; w <= 1; w++)
++			gfx_pixel(cx + tac_sin12[10] * k / 64 + w, cy - TAC_COS12(10) * k / 64 + w, p->focus);
++	tac_disc(cx, cy, 4, p->focus);
++	int s = r + 6;
++	for (int i = 0; i < 4; i++) {
++		int sx = cx + (i & 1 ? s : -s), sy = cy + (i & 2 ? s : -s);
++		tac_circle(sx, sy, 4, p->dim);
++		gfx_hline(sx - 2, sy, 5, p->dim);
++	}
++}
++
 +static void tactical_boot(const char *board_name, const char *version, const char *line1, const char *line2)
 +{
 +	const tac_pal_t *p = tac_pal();
@@ -475,15 +723,18 @@ index d722143..a5818df 100644
 +	const ui_layout_t *L = &ui_layout;
 +	gfx_clear(p->bg);
 +	int r = h >= 300 ? 56 : 40, cy = (h >= 300 ? 36 : 20) + r + 6;
-+	if (p->badge)
-+		tac_badge(p, w / 2, cy, r);
-+	else
-+		tac_reticle(p, w / 2, cy, r);
++	switch (p->emblem) {
++	case TAC_EM_BADGE: tac_badge(p, w / 2, cy, r); break;
++	case TAC_EM_HORIZON: tac_horizon(p, w / 2, cy, r); break;
++	case TAC_EM_SIGHT: tac_sight(p, w / 2, cy, r); break;
++	case TAC_EM_DIAL: tac_dial(p, w / 2, cy, r); break;
++	default: tac_reticle(p, w / 2, cy, r); break;
++	}
 +	int y = cy + r + 20;
 +	const font_t *nf = gfx_text_width(L->large, board_name) <= w - 8 ? L->large : L->medium;
 +	kawaii_center(nf, y, board_name, p->fg);
 +	y += nf->h + 4;
-+	gfx_hline(w / 2 - w / 6, y, w / 3, p->badge ? p->focus : p->dim);
++	gfx_hline(w / 2 - w / 6, y, w / 3, p->emblem != TAC_EM_RETICLE ? p->focus : p->dim);
 +	y += 8;
 +	if (line1 != NULL && line1[0]) {
 +		kawaii_center(L->small, y, line1, p->fg);
@@ -506,7 +757,7 @@ index d722143..a5818df 100644
  #endif
  
  static const color_t acc[UI_ACCENT_COUNT] = {
-@@ -210,7 +434,7 @@ static void accent_apply(void)
+@@ -210,7 +627,7 @@ static void accent_apply(void)
  	if (a != UI_ACCENT_DEFAULT) {
  		ui_col.focus = c;
  		ui_col.focus_fg = RGB565(0, 0, 0);
@@ -515,7 +766,7 @@ index d722143..a5818df 100644
  	}
  #if CONFIG_UI_KAWAII
  	if (kawaii() && ui_theme != 2 && (a == UI_ACCENT_DEFAULT || a == UI_ACCENT_PINK)) {
-@@ -219,6 +443,15 @@ static void accent_apply(void)
+@@ -219,6 +636,15 @@ static void accent_apply(void)
  		ui_col.chnum = ROSE_ACCENT;
  		ui_col.strip_warn = ROSE_INK;
  	}
@@ -531,7 +782,7 @@ index d722143..a5818df 100644
  #endif
  }
  
-@@ -282,6 +515,23 @@ void ui_theme_set(uint8_t theme)
+@@ -282,6 +708,23 @@ void ui_theme_set(uint8_t theme)
  		ui_col.hint_bg = ROSE_SOFT;
  		ui_col.priv = ROSE_ACCENT;
  	}
@@ -555,7 +806,7 @@ index d722143..a5818df 100644
  #endif
  	accent_apply();
  }
-@@ -1245,6 +1495,10 @@ void ui_draw_splash(const char *board_name, const char *version, const char *lin
+@@ -1245,6 +1688,10 @@ void ui_draw_splash(const char *board_name, const char *version, const char *lin
  		kawaii_boot(board_name, version, line1, line2);
  		return;
  	}
@@ -566,7 +817,7 @@ index d722143..a5818df 100644
  #endif
  	int w = gfx_width(), h = gfx_height();
  	const ui_layout_t *L = &ui_layout;
-@@ -3122,8 +3376,8 @@ void ui_draw_home(const radio_view_t *v, const ui_state_t *s)
+@@ -3122,8 +3569,8 @@ void ui_draw_home(const radio_view_t *v, const ui_state_t *s)
  	}
  	color_t fg = ui_col.fg, dim = ui_col.dim, chnum = ui_col.chnum;
  	color_t c = acc[a];
@@ -577,7 +828,7 @@ index d722143..a5818df 100644
  		c = RGB565((c >> 11) * 8u * 5u / 12u,
  			   ((c >> 5) & 63u) * 4u * 5u / 12u, (c & 31u) * 8u * 5u / 12u);
  	ui_col.fg = ui_col.dim = ui_col.chnum = c;
-@@ -4186,6 +4440,72 @@ static void kawaii_grid(const ui_list_t *l, int y, int bottom)
+@@ -4186,6 +4633,72 @@ static void kawaii_grid(const ui_list_t *l, int y, int bottom)
  	if (top + capacity < l->count)
  		gfx_fill(w - 3, bottom - 4, 3, 3, ui_col.priv);
  }
@@ -650,7 +901,7 @@ index d722143..a5818df 100644
  #endif
  
  void ui_draw_list(const radio_view_t *v, const ui_state_t *s, const ui_list_t *l)
-@@ -4202,8 +4522,11 @@ void ui_draw_list(const radio_view_t *v, const ui_state_t *s, const ui_list_t *l
+@@ -4202,8 +4715,11 @@ void ui_draw_list(const radio_view_t *v, const ui_state_t *s, const ui_list_t *l
  		row_h += 6;
  #endif
  #if CONFIG_UI_KAWAII
@@ -677,15 +928,16 @@ index f9d6ea9..bcfdb98 100644
  #endif
  // Color displays (Settings > Display): the highlight color (UI_ACCENT_*, ui_svc.h) for list and tile focus and Home's
 diff --git a/core/ui/ui_svc.h b/core/ui/ui_svc.h
-index 5fc1c7b..fda244a 100644
+index 5fc1c7b..f6c27c9 100644
 --- a/core/ui/ui_svc.h
 +++ b/core/ui/ui_svc.h
-@@ -468,7 +468,7 @@ typedef enum {
+@@ -468,7 +468,8 @@ typedef enum {
  } ui_setting_t;
  
  // UI_SET_CLASSIC_STYLE values. Keep the stored values for Pink and RadioFoundry.
 -enum { UI_STYLE_PINK, UI_STYLE_RADIOFOUNDRY, UI_STYLE_CENTERED, UI_STYLE_COUNT };
-+enum { UI_STYLE_PINK, UI_STYLE_RADIOFOUNDRY, UI_STYLE_CENTERED, UI_STYLE_TACTICAL, UI_STYLE_FIELD, UI_STYLE_COUNT };
++enum { UI_STYLE_PINK, UI_STYLE_RADIOFOUNDRY, UI_STYLE_CENTERED, UI_STYLE_TACTICAL, UI_STYLE_FIELD,
++	UI_STYLE_AVIONICS, UI_STYLE_THERMAL, UI_STYLE_PANEL, UI_STYLE_COUNT };
  
  // UI_SET_ACCENT values: the theme's own highlight (blue), or one of seven. Color displays only
  enum {
