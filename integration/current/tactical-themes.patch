@@ -1,8 +1,8 @@
 diff --git a/core/ui/lang/es.po b/core/ui/lang/es.po
-index ccbf0b2..b23bf04 100644
+index ccbf0b2..a2da5c8 100644
 --- a/core/ui/lang/es.po
 +++ b/core/ui/lang/es.po
-@@ -3915,6 +3915,16 @@ msgctxt "SET_VALUE_STYLE_CENTERED"
+@@ -3915,6 +3915,31 @@ msgctxt "SET_VALUE_STYLE_CENTERED"
  msgid "Centered Home"
  msgstr "Inicio centrado"
  
@@ -16,14 +16,29 @@ index ccbf0b2..b23bf04 100644
 +msgid "Field Drab"
 +msgstr "Verde campaña"
 +
++#: core/ui/ui_menus.c
++msgctxt "SET_LABEL_MENU_LAYOUT"
++msgid "Menu layout"
++msgstr "Diseño del menú"
++
++#: core/ui/ui_menus.c
++msgctxt "SET_VALUE_LAYOUT_ROWS"
++msgid "Rows"
++msgstr "Filas"
++
++#: core/ui/ui_menus.c
++msgctxt "SET_VALUE_LAYOUT_GRID"
++msgid "Grid"
++msgstr "Cuadrícula"
++
  #: core/ui/ui_menus.c
  msgctxt "SET_VALUE_THEME_DARK"
  msgid "Dark"
 diff --git a/core/ui/lang/fr.po b/core/ui/lang/fr.po
-index 3b95727..1521584 100644
+index 3b95727..c8d9b9a 100644
 --- a/core/ui/lang/fr.po
 +++ b/core/ui/lang/fr.po
-@@ -3907,6 +3907,16 @@ msgctxt "SET_VALUE_STYLE_CENTERED"
+@@ -3907,6 +3907,31 @@ msgctxt "SET_VALUE_STYLE_CENTERED"
  msgid "Centered Home"
  msgstr "Accueil centré"
  
@@ -37,14 +52,29 @@ index 3b95727..1521584 100644
 +msgid "Field Drab"
 +msgstr "Kaki terrain"
 +
++#: core/ui/ui_menus.c
++msgctxt "SET_LABEL_MENU_LAYOUT"
++msgid "Menu layout"
++msgstr "Disposition du menu"
++
++#: core/ui/ui_menus.c
++msgctxt "SET_VALUE_LAYOUT_ROWS"
++msgid "Rows"
++msgstr "Lignes"
++
++#: core/ui/ui_menus.c
++msgctxt "SET_VALUE_LAYOUT_GRID"
++msgid "Grid"
++msgstr "Grille"
++
  #: core/ui/ui_menus.c
  msgctxt "SET_VALUE_THEME_DARK"
  msgid "Dark"
 diff --git a/core/ui/lang/it.po b/core/ui/lang/it.po
-index c35b7e1..4b3c425 100644
+index c35b7e1..04f3030 100644
 --- a/core/ui/lang/it.po
 +++ b/core/ui/lang/it.po
-@@ -3907,6 +3907,16 @@ msgctxt "SET_VALUE_STYLE_CENTERED"
+@@ -3907,6 +3907,31 @@ msgctxt "SET_VALUE_STYLE_CENTERED"
  msgid "Centered Home"
  msgstr "Home centrata"
  
@@ -58,14 +88,29 @@ index c35b7e1..4b3c425 100644
 +msgid "Field Drab"
 +msgstr "Verde militare"
 +
++#: core/ui/ui_menus.c
++msgctxt "SET_LABEL_MENU_LAYOUT"
++msgid "Menu layout"
++msgstr "Layout del menu"
++
++#: core/ui/ui_menus.c
++msgctxt "SET_VALUE_LAYOUT_ROWS"
++msgid "Rows"
++msgstr "Righe"
++
++#: core/ui/ui_menus.c
++msgctxt "SET_VALUE_LAYOUT_GRID"
++msgid "Grid"
++msgstr "Griglia"
++
  #: core/ui/ui_menus.c
  msgctxt "SET_VALUE_THEME_DARK"
  msgid "Dark"
 diff --git a/core/ui/lang/zh.po b/core/ui/lang/zh.po
-index e6f3e78..df10da4 100644
+index e6f3e78..ec52fe9 100644
 --- a/core/ui/lang/zh.po
 +++ b/core/ui/lang/zh.po
-@@ -3909,6 +3909,16 @@ msgctxt "SET_VALUE_STYLE_CENTERED"
+@@ -3909,6 +3909,31 @@ msgctxt "SET_VALUE_STYLE_CENTERED"
  msgid "Centered Home"
  msgstr "主页中置"
  
@@ -79,14 +124,29 @@ index e6f3e78..df10da4 100644
 +msgid "Field Drab"
 +msgstr "Field Drab"
 +
++#: core/ui/ui_menus.c
++msgctxt "SET_LABEL_MENU_LAYOUT"
++msgid "Menu layout"
++msgstr "Menu layout"
++
++#: core/ui/ui_menus.c
++msgctxt "SET_VALUE_LAYOUT_ROWS"
++msgid "Rows"
++msgstr "Rows"
++
++#: core/ui/ui_menus.c
++msgctxt "SET_VALUE_LAYOUT_GRID"
++msgid "Grid"
++msgstr "Grid"
++
  #: core/ui/ui_menus.c
  msgctxt "SET_VALUE_THEME_DARK"
  msgid "Dark"
 diff --git a/core/ui/ui_menus.c b/core/ui/ui_menus.c
-index 11479dc..61095f3 100644
+index 11479dc..75a34c9 100644
 --- a/core/ui/ui_menus.c
 +++ b/core/ui/ui_menus.c
-@@ -7971,9 +7971,9 @@ static const tr_id_t n_backlight[] = { TRX(SET_VALUE_BACKLIGHT_5S_20S, "5s/20s")
+@@ -7971,19 +7971,22 @@ static const tr_id_t n_backlight[] = { TRX(SET_VALUE_BACKLIGHT_5S_20S, "5s/20s")
  };
  #if CONFIG_UI_COLOR
  #if CONFIG_UI_KAWAII
@@ -99,7 +159,35 @@ index 11479dc..61095f3 100644
  #endif
  static const int16_t v_theme[] = { 0, 1, 2 };
  static const tr_id_t n_theme[] = {
-@@ -8263,7 +8263,7 @@ static const set_item_t s_display[] = {
+-#if CONFIG_UI_KAWAII
+-	TRN(SET_VALUE_ACCENT_PINK, "Pink"),
+-#else
+-	TRN(SET_VALUE_THEME_DARK, "Dark"),
+-#endif
++	TRN(SET_VALUE_THEME_DARK, "Dark"),	// Pink is retired: the dark theme is dark again
+ 	TRN(SET_VALUE_THEME_LIGHT, "Light"),
+ 	TRN(SET_VALUE_THEME_HIGH_CONTRAST, "High contrast") };
++#if CONFIG_UI_KAWAII
++// The same setting in the tactical styles, which keep their own colors: Dark draws the menus as rows, Light as a grid
++static const tr_id_t n_layout[] = {
++	TRN(SET_VALUE_LAYOUT_ROWS, "Rows"),
++	TRN(SET_VALUE_LAYOUT_GRID, "Grid"),
++	TRN(SET_VALUE_THEME_HIGH_CONTRAST, "High contrast") };
++#endif
+ static const int16_t v_accent[] = { UI_ACCENT_DEFAULT, UI_ACCENT_RED, UI_ACCENT_ORANGE, UI_ACCENT_YELLOW, UI_ACCENT_TEAL,
+ 				     UI_ACCENT_BLUE, UI_ACCENT_PURPLE, UI_ACCENT_PINK };
+ static const tr_id_t n_accent[] = { TRN(VALUE_DEFAULT, "Default"), TRN(SET_VALUE_ACCENT_RED, "Red"),
+@@ -8253,6 +8256,9 @@ static const set_item_t s_display[] = {
+ 		n_backlight),
+ #if CONFIG_UI_COLOR	// a radio whose only screen is monochrome has no colors to set: no rows for them
+ 	LIST(TRN(SET_LABEL_THEME, "Theme"), "contrast", UI_SET_THEME, v_theme, n_theme),
++#if CONFIG_UI_KAWAII
++	LIST(TRN(SET_LABEL_MENU_LAYOUT, "Menu layout"), "theme grid rows contrast", UI_SET_THEME, v_theme, n_layout),
++#endif
+ 	LIST(TRN(SET_LABEL_HIGHLIGHT_COLOR, "Highlight color"), "accent", UI_SET_ACCENT, v_accent, n_accent),
+ 	TOGGLE(TRN(SET_LABEL_FILLED_STATUS_BAR, "Filled status bar"), "top line", UI_SET_STRIP),
+ #endif
+@@ -8263,7 +8269,7 @@ static const set_item_t s_display[] = {
  		UI_SET_LABEL_FIRST),
  #endif
  #if CONFIG_UI_COLOR && CONFIG_UI_KAWAII
@@ -108,8 +196,18 @@ index 11479dc..61095f3 100644
  		v_style, n_style),
  	TOGGLE(TRN(SET_LABEL_LARGE_CHANNEL_NAME, "Large channel name"), "Home Pink frequency name", UI_SET_HOME_NAME_FIRST),
  #endif
+@@ -8515,6 +8521,9 @@ static bool set_hidden(const set_item_t *s)
+ 		return !ui_style_available();
+ 	if (s->type == ST_TOGGLE && s->id == UI_SET_HOME_NAME_FIRST)
+ 		return !ui_home_name_first_available();
++	// Theme or Menu layout: one row for the one setting, by the style in use
++	if (s->type == ST_LIST && s->id == UI_SET_THEME)
++		return ui_style_tactical() != (s->names == n_layout);
+ #endif
+ #if CONFIG_KEY_ASSIGN
+ 	if (s->type != ST_ACTION && s->id >= UI_SET_KEY_FIRST && s->id <= UI_SET_KEY_LAST) {
 diff --git a/core/ui/ui_screens.c b/core/ui/ui_screens.c
-index d722143..825b287 100644
+index d722143..7605689 100644
 --- a/core/ui/ui_screens.c
 +++ b/core/ui/ui_screens.c
 @@ -46,7 +46,7 @@ static bool ui_strip_fill;
@@ -132,7 +230,7 @@ index d722143..825b287 100644
  	if (ui_style != style) {
  		ui_style = style;
  		ui_layout_init();
-@@ -79,6 +79,47 @@ static bool centered_home(void)
+@@ -79,6 +79,52 @@ static bool centered_home(void)
  	return ui_style == UI_STYLE_CENTERED && ui_style_available();
  }
  
@@ -177,10 +275,15 @@ index d722143..825b287 100644
 +	return tac_pal() != NULL;
 +}
 +
++bool ui_style_tactical(void)
++{
++	return tactical();
++}
++
  bool ui_home_name_first_available(void)
  {
  	return kawaii();
-@@ -161,9 +202,145 @@ static void kawaii_boot(const char *board_name, const char *version, const char
+@@ -161,9 +207,145 @@ static void kawaii_boot(const char *board_name, const char *version, const char
  	sb_str(&b, version);
  	kawaii_center(ui_layout.tiny, h - ui_layout.tiny->h - 2, foot, ROSE_INK);
  }
@@ -326,7 +429,7 @@ index d722143..825b287 100644
  #endif
  
  static const color_t acc[UI_ACCENT_COUNT] = {
-@@ -210,7 +387,7 @@ static void accent_apply(void)
+@@ -210,7 +392,7 @@ static void accent_apply(void)
  	if (a != UI_ACCENT_DEFAULT) {
  		ui_col.focus = c;
  		ui_col.focus_fg = RGB565(0, 0, 0);
@@ -335,7 +438,7 @@ index d722143..825b287 100644
  	}
  #if CONFIG_UI_KAWAII
  	if (kawaii() && ui_theme != 2 && (a == UI_ACCENT_DEFAULT || a == UI_ACCENT_PINK)) {
-@@ -219,6 +396,14 @@ static void accent_apply(void)
+@@ -219,6 +401,14 @@ static void accent_apply(void)
  		ui_col.chnum = ROSE_ACCENT;
  		ui_col.strip_warn = ROSE_INK;
  	}
@@ -350,7 +453,7 @@ index d722143..825b287 100644
  #endif
  }
  
-@@ -282,6 +467,23 @@ void ui_theme_set(uint8_t theme)
+@@ -282,6 +472,23 @@ void ui_theme_set(uint8_t theme)
  		ui_col.hint_bg = ROSE_SOFT;
  		ui_col.priv = ROSE_ACCENT;
  	}
@@ -374,7 +477,7 @@ index d722143..825b287 100644
  #endif
  	accent_apply();
  }
-@@ -1245,6 +1447,10 @@ void ui_draw_splash(const char *board_name, const char *version, const char *lin
+@@ -1245,6 +1452,10 @@ void ui_draw_splash(const char *board_name, const char *version, const char *lin
  		kawaii_boot(board_name, version, line1, line2);
  		return;
  	}
@@ -385,7 +488,7 @@ index d722143..825b287 100644
  #endif
  	int w = gfx_width(), h = gfx_height();
  	const ui_layout_t *L = &ui_layout;
-@@ -3122,8 +3328,8 @@ void ui_draw_home(const radio_view_t *v, const ui_state_t *s)
+@@ -3122,8 +3333,8 @@ void ui_draw_home(const radio_view_t *v, const ui_state_t *s)
  	}
  	color_t fg = ui_col.fg, dim = ui_col.dim, chnum = ui_col.chnum;
  	color_t c = acc[a];
@@ -396,7 +499,7 @@ index d722143..825b287 100644
  		c = RGB565((c >> 11) * 8u * 5u / 12u,
  			   ((c >> 5) & 63u) * 4u * 5u / 12u, (c & 31u) * 8u * 5u / 12u);
  	ui_col.fg = ui_col.dim = ui_col.chnum = c;
-@@ -4186,6 +4392,72 @@ static void kawaii_grid(const ui_list_t *l, int y, int bottom)
+@@ -4186,6 +4397,72 @@ static void kawaii_grid(const ui_list_t *l, int y, int bottom)
  	if (top + capacity < l->count)
  		gfx_fill(w - 3, bottom - 4, 3, 3, ui_col.priv);
  }
@@ -469,7 +572,7 @@ index d722143..825b287 100644
  #endif
  
  void ui_draw_list(const radio_view_t *v, const ui_state_t *s, const ui_list_t *l)
-@@ -4202,8 +4474,11 @@ void ui_draw_list(const radio_view_t *v, const ui_state_t *s, const ui_list_t *l
+@@ -4202,8 +4479,11 @@ void ui_draw_list(const radio_view_t *v, const ui_state_t *s, const ui_list_t *l
  		row_h += 6;
  #endif
  #if CONFIG_UI_KAWAII
@@ -483,6 +586,18 @@ index d722143..825b287 100644
  		ui_draw_banner(s);
  		ui_draw_bottom(s, l->hint);
  		return;
+diff --git a/core/ui/ui_screens.h b/core/ui/ui_screens.h
+index f9d6ea9..bcfdb98 100644
+--- a/core/ui/ui_screens.h
++++ b/core/ui/ui_screens.h
+@@ -208,6 +208,7 @@ void ui_theme_set(uint8_t theme);
+ bool ui_style_available(void);
+ void ui_visual_style_set(uint8_t style);
+ bool ui_home_name_first_available(void);
++bool ui_style_tactical(void);	// Tactical or Field Drab: Settings shows Menu layout in place of Theme
+ void ui_home_name_first_set(bool on);
+ #endif
+ // Color displays (Settings > Display): the highlight color (UI_ACCENT_*, ui_svc.h) for list and tile focus and Home's
 diff --git a/core/ui/ui_svc.h b/core/ui/ui_svc.h
 index 5fc1c7b..fda244a 100644
 --- a/core/ui/ui_svc.h
