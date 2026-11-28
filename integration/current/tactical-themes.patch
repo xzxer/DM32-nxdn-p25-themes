@@ -143,10 +143,10 @@ index e6f3e78..ec52fe9 100644
  msgctxt "SET_VALUE_THEME_DARK"
  msgid "Dark"
 diff --git a/core/ui/ui_menus.c b/core/ui/ui_menus.c
-index 11479dc..cfd545a 100644
+index 11479dc..b698896 100644
 --- a/core/ui/ui_menus.c
 +++ b/core/ui/ui_menus.c
-@@ -7971,19 +7971,26 @@ static const tr_id_t n_backlight[] = { TRX(SET_VALUE_BACKLIGHT_5S_20S, "5s/20s")
+@@ -7971,19 +7971,30 @@ static const tr_id_t n_backlight[] = { TRX(SET_VALUE_BACKLIGHT_5S_20S, "5s/20s")
  };
  #if CONFIG_UI_COLOR
  #if CONFIG_UI_KAWAII
@@ -173,15 +173,19 @@ index 11479dc..cfd545a 100644
 +	TRN(SET_VALUE_LAYOUT_ROWS, "Rows"),
 +	TRN(SET_VALUE_LAYOUT_GRID, "Grid"),
 +	TRN(SET_VALUE_THEME_HIGH_CONTRAST, "High contrast") };
-+// Highlight color in the tactical styles: their own mixes in the same slots (ui_screens.c tac_mix), named as kit
-+static const tr_id_t n_accent_tac[] = { TRX(SET_VALUE_MIX_STANDARD, "Standard"), TRX(SET_VALUE_MIX_RED_LENS, "Red lens"),
-+	TRX(SET_VALUE_MIX_AMBER_HUD, "Amber HUD"), TRX(SET_VALUE_MIX_SIGNAL, "Signal"), TRX(SET_VALUE_MIX_RANGER, "Ranger"),
-+	TRX(SET_VALUE_MIX_ARCTIC, "Arctic"), TRX(SET_VALUE_MIX_COYOTE, "Coyote"), TRX(SET_VALUE_MIX_GHOST, "Ghost") };
++// Variant in the tactical styles: a whole palette each (ui_screens.c tac_nvg, tac_field), stored in the highlight color
++static const int16_t v_variant[] = { UI_ACCENT_DEFAULT, UI_ACCENT_RED, UI_ACCENT_ORANGE, UI_ACCENT_YELLOW, UI_ACCENT_TEAL };
++static const tr_id_t n_variant_nvg[] = { TRX(SET_VALUE_VARIANT_WHITE_PHOSPHOR, "White phosphor"),
++	TRX(SET_VALUE_VARIANT_GREEN_PHOSPHOR, "Green phosphor"), TRX(SET_VALUE_VARIANT_RED_NIGHT, "Red night"),
++	TRX(SET_VALUE_VARIANT_AMBER_PHOSPHOR, "Amber phosphor"), TRX(SET_VALUE_VARIANT_CYAN_HUD, "Cyan HUD") };
++static const tr_id_t n_variant_field[] = { TRX(SET_VALUE_VARIANT_ARMY_GREEN, "Army green"),
++	TRX(SET_VALUE_VARIANT_NAVY, "Navy"), TRX(SET_VALUE_VARIANT_DESERT, "Desert"),
++	TRX(SET_VALUE_VARIANT_MULTICAM, "Multicam"), TRX(SET_VALUE_VARIANT_URBAN, "Urban") };
 +#endif
  static const int16_t v_accent[] = { UI_ACCENT_DEFAULT, UI_ACCENT_RED, UI_ACCENT_ORANGE, UI_ACCENT_YELLOW, UI_ACCENT_TEAL,
  				     UI_ACCENT_BLUE, UI_ACCENT_PURPLE, UI_ACCENT_PINK };
  static const tr_id_t n_accent[] = { TRN(VALUE_DEFAULT, "Default"), TRN(SET_VALUE_ACCENT_RED, "Red"),
-@@ -8253,7 +8260,14 @@ static const set_item_t s_display[] = {
+@@ -8253,7 +8264,16 @@ static const set_item_t s_display[] = {
  		n_backlight),
  #if CONFIG_UI_COLOR	// a radio whose only screen is monochrome has no colors to set: no rows for them
  	LIST(TRN(SET_LABEL_THEME, "Theme"), "contrast", UI_SET_THEME, v_theme, n_theme),
@@ -190,13 +194,15 @@ index 11479dc..cfd545a 100644
 +#endif
  	LIST(TRN(SET_LABEL_HIGHLIGHT_COLOR, "Highlight color"), "accent", UI_SET_ACCENT, v_accent, n_accent),
 +#if CONFIG_UI_KAWAII
-+	LIST(TRN(SET_LABEL_HIGHLIGHT_COLOR, "Highlight color"), "accent mix red lens amber signal ranger arctic coyote ghost",
-+		UI_SET_ACCENT, v_accent, n_accent_tac),
++	LIST(TRX(SET_LABEL_VARIANT, "Variant"), "accent highlight color phosphor white green red night amber cyan hud",
++		UI_SET_ACCENT, v_variant, n_variant_nvg),
++	LIST(TRX(SET_LABEL_VARIANT, "Variant"), "accent highlight color army green navy desert multicam urban camo",
++		UI_SET_ACCENT, v_variant, n_variant_field),
 +#endif
  	TOGGLE(TRN(SET_LABEL_FILLED_STATUS_BAR, "Filled status bar"), "top line", UI_SET_STRIP),
  #endif
  	TOGGLE(TRN(SET_LABEL_LARGE_TEXT, "Large text"), "accessibility", UI_SET_LARGE_TEXT),
-@@ -8263,7 +8277,7 @@ static const set_item_t s_display[] = {
+@@ -8263,7 +8283,7 @@ static const set_item_t s_display[] = {
  		UI_SET_LABEL_FIRST),
  #endif
  #if CONFIG_UI_COLOR && CONFIG_UI_KAWAII
@@ -205,19 +211,23 @@ index 11479dc..cfd545a 100644
  		v_style, n_style),
  	TOGGLE(TRN(SET_LABEL_LARGE_CHANNEL_NAME, "Large channel name"), "Home Pink frequency name", UI_SET_HOME_NAME_FIRST),
  #endif
-@@ -8515,6 +8529,11 @@ static bool set_hidden(const set_item_t *s)
+@@ -8515,6 +8535,15 @@ static bool set_hidden(const set_item_t *s)
  		return !ui_style_available();
  	if (s->type == ST_TOGGLE && s->id == UI_SET_HOME_NAME_FIRST)
  		return !ui_home_name_first_available();
 +	// Theme or Menu layout: one row for the one setting, by the style in use
 +	if (s->type == ST_LIST && s->id == UI_SET_THEME)
 +		return ui_style_tactical() != (s->names == n_layout);
-+	if (s->type == ST_LIST && s->id == UI_SET_ACCENT)
-+		return ui_style_tactical() != (s->names == n_accent_tac);
++	// Highlight color, or the variants of the tactical style in use
++	if (s->type == ST_LIST && s->id == UI_SET_ACCENT) {
++		int st = ui_style_tactical() ? ui_svc_setting_get(UI_SET_CLASSIC_STYLE) : -1;
++		const tr_id_t *want = st == UI_STYLE_TACTICAL ? n_variant_nvg : st == UI_STYLE_FIELD ? n_variant_field : n_accent;
++		return s->names != want;
++	}
  #endif
  #if CONFIG_KEY_ASSIGN
  	if (s->type != ST_ACTION && s->id >= UI_SET_KEY_FIRST && s->id <= UI_SET_KEY_LAST) {
-@@ -8652,12 +8671,7 @@ static void set_value_text(const set_item_t *s, int32_t v, char *out, size_t len
+@@ -8652,12 +8681,7 @@ static void set_value_text(const set_item_t *s, int32_t v, char *out, size_t len
  		sb_str(&b, v ? TR(VALUE_ON, "On") : TR(VALUE_OFF, "Off"));
  		break;
  	case ST_LIST:
@@ -232,7 +242,7 @@ index 11479dc..cfd545a 100644
  		{
  			const char *home = home_key_default(s->id, v);
 diff --git a/core/ui/ui_screens.c b/core/ui/ui_screens.c
-index d722143..c10cfa4 100644
+index d722143..a5818df 100644
 --- a/core/ui/ui_screens.c
 +++ b/core/ui/ui_screens.c
 @@ -46,7 +46,7 @@ static bool ui_strip_fill;
@@ -255,7 +265,7 @@ index d722143..c10cfa4 100644
  	if (ui_style != style) {
  		ui_style = style;
  		ui_layout_init();
-@@ -79,6 +79,67 @@ static bool centered_home(void)
+@@ -79,6 +79,94 @@ static bool centered_home(void)
  	return ui_style == UI_STYLE_CENTERED && ui_style_available();
  }
  
@@ -268,31 +278,73 @@ index d722143..c10cfa4 100644
 +	bool badge;			// boot emblem: a unit badge, else a reticle
 +} tac_pal_t;
 +
-+// White phosphor: blue-green white on near-black, as a white phosphor night vision tube. Text on the background at
-+// least 7:1 (fg 17:1, dim 8:1); TX stays red-orange, the one warm color, so it can't be missed
-+static const tac_pal_t tac_nvg = {
-+	.bg = RGB565(8, 16, 16), .fg = RGB565(216, 248, 240), .dim = RGB565(136, 176, 176), .line = RGB565(40, 64, 64),
-+	.tx = RGB565(200, 48, 24), .rx = RGB565(160, 240, 248), .warn = RGB565(248, 216, 112), .idle = RGB565(88, 120, 120),
-+	.hint_bg = RGB565(20, 36, 36), .priv = RGB565(120, 200, 248),
-+	.strip_bg = RGB565(136, 176, 176), .strip_warn = RGB565(96, 40, 0),	// muted, so the RX pill stands out on it
-+	.focus = RGB565(216, 248, 240), .chnum = RGB565(160, 240, 248), .badge = false,
++// The variants (Settings > Display > Variant), stored in the highlight color setting: UI_ACCENT_DEFAULT is the first.
++// Text on the background at least 6:1 except Red night, kept dim on purpose
++#define TAC_VARIANTS 5
++// Tactical: night vision and phosphor displays
++static const tac_pal_t tac_nvg[TAC_VARIANTS] = {
++	// White phosphor: blue-green white, as a white phosphor tube; TX stays red-orange, the one warm color
++	{ .bg = RGB565(8, 16, 16), .fg = RGB565(216, 248, 240), .dim = RGB565(136, 176, 176), .line = RGB565(40, 64, 64),
++	  .tx = RGB565(200, 48, 24), .rx = RGB565(160, 240, 248), .warn = RGB565(248, 216, 112), .idle = RGB565(88, 120, 120),
++	  .hint_bg = RGB565(20, 36, 36), .priv = RGB565(120, 200, 248), .strip_bg = RGB565(136, 176, 176), .strip_warn = RGB565(96, 40, 0),
++	  .focus = RGB565(216, 248, 240), .chnum = RGB565(160, 240, 248), .badge = false },
++	// Green phosphor: the old green-on-black terminal (P1); RX a yellower green, TX red-orange
++	{ .bg = RGB565(0, 12, 0), .fg = RGB565(136, 248, 112), .dim = RGB565(72, 184, 64), .line = RGB565(16, 64, 16),
++	  .tx = RGB565(232, 72, 32), .rx = RGB565(208, 248, 120), .warn = RGB565(248, 216, 64), .idle = RGB565(48, 120, 40),
++	  .hint_bg = RGB565(8, 32, 8), .priv = RGB565(152, 232, 200), .strip_bg = RGB565(72, 184, 64), .strip_warn = RGB565(88, 24, 0),
++	  .focus = RGB565(136, 248, 112), .chnum = RGB565(208, 248, 120), .badge = false },
++	// Red night: red-light discipline, nothing that kills dark adaptation; TX is the one hot white so it still stands out
++	{ .bg = RGB565(16, 0, 0), .fg = RGB565(248, 96, 72), .dim = RGB565(208, 64, 48), .line = RGB565(72, 16, 16),
++	  .tx = RGB565(248, 232, 200), .rx = RGB565(248, 152, 112), .warn = RGB565(248, 184, 64), .idle = RGB565(128, 36, 24),
++	  .hint_bg = RGB565(40, 8, 8), .priv = RGB565(248, 128, 160), .strip_bg = RGB565(208, 64, 48), .strip_warn = RGB565(64, 16, 0),
++	  .focus = RGB565(248, 96, 72), .chnum = RGB565(248, 152, 112), .badge = false },
++	// Amber phosphor: the amber monochrome monitor (P3); RX pale, TX red
++	{ .bg = RGB565(16, 8, 0), .fg = RGB565(248, 184, 64), .dim = RGB565(200, 136, 40), .line = RGB565(72, 40, 8),
++	  .tx = RGB565(232, 48, 32), .rx = RGB565(248, 224, 144), .warn = RGB565(248, 120, 48), .idle = RGB565(120, 80, 24),
++	  .hint_bg = RGB565(40, 24, 4), .priv = RGB565(248, 152, 112), .strip_bg = RGB565(200, 136, 40), .strip_warn = RGB565(80, 24, 0),
++	  .focus = RGB565(248, 184, 64), .chnum = RGB565(248, 224, 144), .badge = false },
++	// Cyan HUD: cockpit head-up display blue; RX aqua green
++	{ .bg = RGB565(0, 8, 20), .fg = RGB565(160, 232, 248), .dim = RGB565(96, 160, 200), .line = RGB565(24, 48, 72),
++	  .tx = RGB565(232, 64, 40), .rx = RGB565(120, 248, 200), .warn = RGB565(248, 208, 96), .idle = RGB565(56, 96, 128),
++	  .hint_bg = RGB565(8, 24, 40), .priv = RGB565(168, 160, 248), .strip_bg = RGB565(96, 160, 200), .strip_warn = RGB565(88, 32, 0),
++	  .focus = RGB565(160, 232, 248), .chnum = RGB565(120, 248, 200), .badge = false },
 +};
 +
-+// Field Drab: tan text on olive drab, coyote highlights, as gear stencils and unit patches. Text on the background
-+// at least 6:1 (fg 13:1, dim 6:1)
-+static const tac_pal_t tac_field = {
-+	.bg = RGB565(24, 28, 16), .fg = RGB565(224, 216, 184), .dim = RGB565(160, 148, 112), .line = RGB565(76, 80, 52),
-+	.tx = RGB565(200, 56, 32), .rx = RGB565(168, 192, 80), .warn = RGB565(232, 160, 48), .idle = RGB565(120, 112, 80),
-+	.hint_bg = RGB565(44, 48, 32), .priv = RGB565(144, 176, 208),
-+	.strip_bg = RGB565(224, 216, 184), .strip_warn = RGB565(120, 48, 0),	// tan, so the olive RX pill stands out on it
-+	.focus = RGB565(200, 168, 104), .chnum = RGB565(200, 168, 104), .badge = true,
++// Field Drab: uniform and camouflage patterns, each with a unit badge at boot
++static const tac_pal_t tac_field[TAC_VARIANTS] = {
++	// Army green: tan stencil text on olive drab, coyote highlights
++	{ .bg = RGB565(24, 28, 16), .fg = RGB565(224, 216, 184), .dim = RGB565(160, 148, 112), .line = RGB565(76, 80, 52),
++	  .tx = RGB565(200, 56, 32), .rx = RGB565(168, 192, 80), .warn = RGB565(232, 160, 48), .idle = RGB565(120, 112, 80),
++	  .hint_bg = RGB565(44, 48, 32), .priv = RGB565(144, 176, 208), .strip_bg = RGB565(224, 216, 184), .strip_warn = RGB565(120, 48, 0),
++	  .focus = RGB565(200, 168, 104), .chnum = RGB565(200, 168, 104), .badge = true },
++	// Navy: haze gray on navy blue, brass highlights
++	{ .bg = RGB565(8, 16, 32), .fg = RGB565(216, 224, 232), .dim = RGB565(136, 152, 176), .line = RGB565(40, 56, 88),
++	  .tx = RGB565(216, 56, 40), .rx = RGB565(120, 200, 232), .warn = RGB565(240, 184, 72), .idle = RGB565(88, 104, 136),
++	  .hint_bg = RGB565(20, 32, 56), .priv = RGB565(168, 176, 232), .strip_bg = RGB565(216, 224, 232), .strip_warn = RGB565(120, 48, 0),
++	  .focus = RGB565(232, 200, 104), .chnum = RGB565(232, 200, 104), .badge = true },
++	// Desert: sand on dark earth, khaki strip, coyote brown highlights
++	{ .bg = RGB565(40, 32, 20), .fg = RGB565(240, 224, 192), .dim = RGB565(184, 160, 120), .line = RGB565(88, 72, 48),
++	  .tx = RGB565(208, 56, 32), .rx = RGB565(176, 192, 112), .warn = RGB565(240, 168, 56), .idle = RGB565(136, 112, 80),
++	  .hint_bg = RGB565(60, 48, 32), .priv = RGB565(152, 184, 208), .strip_bg = RGB565(216, 192, 144), .strip_warn = RGB565(112, 40, 0),
++	  .focus = RGB565(208, 144, 80), .chnum = RGB565(208, 144, 80), .badge = true },
++	// Multicam: tan text, a field green strip and tan-brown highlights on dark brown-green, the pattern's three tones
++	{ .bg = RGB565(32, 30, 22), .fg = RGB565(232, 216, 180), .dim = RGB565(168, 156, 116), .line = RGB565(80, 76, 56),
++	  .tx = RGB565(208, 56, 32), .rx = RGB565(160, 184, 104), .warn = RGB565(232, 160, 48), .idle = RGB565(120, 108, 80),
++	  .hint_bg = RGB565(52, 48, 36), .priv = RGB565(144, 168, 184), .strip_bg = RGB565(160, 184, 104), .strip_warn = RGB565(96, 32, 0),
++	  .focus = RGB565(208, 168, 120), .chnum = RGB565(176, 196, 120), .badge = true },
++	// Urban: concrete grays with a steel highlight, as urban camouflage
++	{ .bg = RGB565(20, 22, 24), .fg = RGB565(216, 216, 208), .dim = RGB565(152, 152, 144), .line = RGB565(64, 64, 64),
++	  .tx = RGB565(216, 56, 40), .rx = RGB565(152, 208, 168), .warn = RGB565(232, 176, 64), .idle = RGB565(104, 104, 100),
++	  .hint_bg = RGB565(36, 38, 40), .priv = RGB565(152, 176, 216), .strip_bg = RGB565(176, 180, 172), .strip_warn = RGB565(112, 40, 0),
++	  .focus = RGB565(184, 200, 216), .chnum = RGB565(184, 200, 216), .badge = true },
 +};
 +
 +static const tac_pal_t *tac_pal(void)
 +{
 +	if (!ui_style_available())
 +		return NULL;
-+	return ui_style == UI_STYLE_TACTICAL ? &tac_nvg : ui_style == UI_STYLE_FIELD ? &tac_field : NULL;
++	uint8_t v = ui_accent < TAC_VARIANTS ? ui_accent : 0;
++	return ui_style == UI_STYLE_TACTICAL ? &tac_nvg[v] : ui_style == UI_STYLE_FIELD ? &tac_field[v] : NULL;
 +}
 +
 +static bool tactical(void)
@@ -305,25 +357,10 @@ index d722143..c10cfa4 100644
 +	return tactical();
 +}
 +
-+// The tactical highlight mixes (Settings > Display > Highlight color in Tactical and Field Drab), one per UI_ACCENT_*
-+// slot so the saved setting is the same number: the filled strip, the focus row and Home's channel number, each a
-+// light shade under the style's dark text (at least 7:1), and the strip's warnings, dark (at least 5:1).
-+// Standard (UI_ACCENT_DEFAULT) is the style's own
-+typedef struct { color_t strip, focus, chnum, warn; } tac_mix_t;
-+static const tac_mix_t tac_mix[UI_ACCENT_COUNT] = {
-+	[UI_ACCENT_RED] = { RGB565(248, 128, 112), RGB565(248, 128, 112), RGB565(248, 128, 112), RGB565(0, 32, 120) },	// Red lens
-+	[UI_ACCENT_ORANGE] = { RGB565(248, 192, 64), RGB565(248, 192, 64), RGB565(248, 192, 64), RGB565(96, 40, 0) },	// Amber HUD
-+	[UI_ACCENT_YELLOW] = { RGB565(248, 152, 64), RGB565(248, 152, 64), RGB565(248, 152, 64), RGB565(0, 40, 152) },	// Signal
-+	[UI_ACCENT_TEAL] = { RGB565(152, 200, 112), RGB565(200, 168, 104), RGB565(152, 200, 112), RGB565(96, 40, 0) },	// Ranger
-+	[UI_ACCENT_BLUE] = { RGB565(232, 240, 240), RGB565(144, 200, 248), RGB565(144, 200, 248), RGB565(128, 64, 0) },	// Arctic
-+	[UI_ACCENT_PURPLE] = { RGB565(200, 168, 104), RGB565(200, 168, 104), RGB565(200, 168, 104), RGB565(88, 36, 0) },	// Coyote
-+	[UI_ACCENT_PINK] = { RGB565(176, 184, 184), RGB565(232, 240, 240), RGB565(232, 240, 240), RGB565(96, 40, 0) },	// Ghost
-+};
-+
  bool ui_home_name_first_available(void)
  {
  	return kawaii();
-@@ -161,9 +222,145 @@ static void kawaii_boot(const char *board_name, const char *version, const char
+@@ -161,9 +249,145 @@ static void kawaii_boot(const char *board_name, const char *version, const char
  	sb_str(&b, version);
  	kawaii_center(ui_layout.tiny, h - ui_layout.tiny->h - 2, foot, ROSE_INK);
  }
@@ -469,7 +506,7 @@ index d722143..c10cfa4 100644
  #endif
  
  static const color_t acc[UI_ACCENT_COUNT] = {
-@@ -210,7 +407,7 @@ static void accent_apply(void)
+@@ -210,7 +434,7 @@ static void accent_apply(void)
  	if (a != UI_ACCENT_DEFAULT) {
  		ui_col.focus = c;
  		ui_col.focus_fg = RGB565(0, 0, 0);
@@ -478,24 +515,23 @@ index d722143..c10cfa4 100644
  	}
  #if CONFIG_UI_KAWAII
  	if (kawaii() && ui_theme != 2 && (a == UI_ACCENT_DEFAULT || a == UI_ACCENT_PINK)) {
-@@ -219,6 +416,16 @@ static void accent_apply(void)
+@@ -219,6 +443,15 @@ static void accent_apply(void)
  		ui_col.chnum = ROSE_ACCENT;
  		ui_col.strip_warn = ROSE_INK;
  	}
 +	if (tactical() && ui_theme != 2) {
++		// The variant's own colors whatever the setting holds; it picks the variant (tac_pal)
 +		const tac_pal_t *p = tac_pal();
-+		const tac_mix_t *m = &tac_mix[a];
-+		bool own = a == UI_ACCENT_DEFAULT;
-+		ui_col.strip_bg = own ? p->strip_bg : m->strip;
-+		ui_col.strip_warn = own ? p->strip_warn : m->warn;
-+		ui_col.focus = own ? p->focus : m->focus;	// the focus row in reverse video
++		ui_col.strip_bg = p->strip_bg;
++		ui_col.strip_warn = p->strip_warn;
++		ui_col.focus = p->focus;	// the focus row in reverse video
 +		ui_col.focus_fg = p->bg;
-+		ui_col.chnum = own ? p->chnum : m->chnum;
++		ui_col.chnum = p->chnum;
 +	}
  #endif
  }
  
-@@ -282,6 +489,23 @@ void ui_theme_set(uint8_t theme)
+@@ -282,6 +515,23 @@ void ui_theme_set(uint8_t theme)
  		ui_col.hint_bg = ROSE_SOFT;
  		ui_col.priv = ROSE_ACCENT;
  	}
@@ -519,7 +555,7 @@ index d722143..c10cfa4 100644
  #endif
  	accent_apply();
  }
-@@ -1245,6 +1469,10 @@ void ui_draw_splash(const char *board_name, const char *version, const char *lin
+@@ -1245,6 +1495,10 @@ void ui_draw_splash(const char *board_name, const char *version, const char *lin
  		kawaii_boot(board_name, version, line1, line2);
  		return;
  	}
@@ -530,7 +566,7 @@ index d722143..c10cfa4 100644
  #endif
  	int w = gfx_width(), h = gfx_height();
  	const ui_layout_t *L = &ui_layout;
-@@ -3122,8 +3350,8 @@ void ui_draw_home(const radio_view_t *v, const ui_state_t *s)
+@@ -3122,8 +3376,8 @@ void ui_draw_home(const radio_view_t *v, const ui_state_t *s)
  	}
  	color_t fg = ui_col.fg, dim = ui_col.dim, chnum = ui_col.chnum;
  	color_t c = acc[a];
@@ -541,7 +577,7 @@ index d722143..c10cfa4 100644
  		c = RGB565((c >> 11) * 8u * 5u / 12u,
  			   ((c >> 5) & 63u) * 4u * 5u / 12u, (c & 31u) * 8u * 5u / 12u);
  	ui_col.fg = ui_col.dim = ui_col.chnum = c;
-@@ -4186,6 +4414,72 @@ static void kawaii_grid(const ui_list_t *l, int y, int bottom)
+@@ -4186,6 +4440,72 @@ static void kawaii_grid(const ui_list_t *l, int y, int bottom)
  	if (top + capacity < l->count)
  		gfx_fill(w - 3, bottom - 4, 3, 3, ui_col.priv);
  }
@@ -614,7 +650,7 @@ index d722143..c10cfa4 100644
  #endif
  
  void ui_draw_list(const radio_view_t *v, const ui_state_t *s, const ui_list_t *l)
-@@ -4202,8 +4496,11 @@ void ui_draw_list(const radio_view_t *v, const ui_state_t *s, const ui_list_t *l
+@@ -4202,8 +4522,11 @@ void ui_draw_list(const radio_view_t *v, const ui_state_t *s, const ui_list_t *l
  		row_h += 6;
  #endif
  #if CONFIG_UI_KAWAII
