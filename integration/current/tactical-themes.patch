@@ -109,7 +109,7 @@ index 11479dc..61095f3 100644
  	TOGGLE(TRN(SET_LABEL_LARGE_CHANNEL_NAME, "Large channel name"), "Home Pink frequency name", UI_SET_HOME_NAME_FIRST),
  #endif
 diff --git a/core/ui/ui_screens.c b/core/ui/ui_screens.c
-index d722143..beeeff8 100644
+index d722143..825b287 100644
 --- a/core/ui/ui_screens.c
 +++ b/core/ui/ui_screens.c
 @@ -46,7 +46,7 @@ static bool ui_strip_fill;
@@ -396,6 +396,93 @@ index d722143..beeeff8 100644
  		c = RGB565((c >> 11) * 8u * 5u / 12u,
  			   ((c >> 5) & 63u) * 4u * 5u / 12u, (c & 31u) * 8u * 5u / 12u);
  	ui_col.fg = ui_col.dim = ui_col.chnum = c;
+@@ -4186,6 +4392,72 @@ static void kawaii_grid(const ui_list_t *l, int y, int bottom)
+ 	if (top + capacity < l->count)
+ 		gfx_fill(w - 3, bottom - 4, 3, 3, ui_col.priv);
+ }
++
++// The tactical styles with the Light theme: Hub, Tools and Settings as a grid of square cards, two a row, as Pink's
++// grid but without its ornaments (the Dark theme keeps RadioFoundry's rows). Same geometry and focus order as
++// kawaii_grid, so the keys move the same way
++static bool tac_grid(void)
++{
++	return tactical() && ui_theme == 1;
++}
++
++static void tactical_grid(const ui_list_t *l, int y, int bottom)
++{
++	const ui_layout_t *L = &ui_layout;
++	const font_t *f = L->small;
++	int w = gfx_width(), pitch = l->count <= 8 && bottom - y >= 248 ? (bottom - y) / 4 : 77;
++	int rows = (bottom - y) / pitch;
++	if (rows < 1)
++		rows = 1;
++	uint16_t capacity = (uint16_t)(2 * rows), top = l->top != NULL ? *l->top : 0;
++	top &= (uint16_t)~1u;
++	if (l->focus < top)
++		top = l->focus & (uint16_t)~1u;
++	if (l->focus >= top + capacity)
++		top = (uint16_t)((l->focus / 2u - rows + 1u) * 2u);
++	if (l->top != NULL)
++		*l->top = top;
++	for (uint16_t i = top; i < l->count && i < top + capacity; i++) {
++		ui_item_t it = {0};
++		l->item(i, &it);
++		int col = (i - top) % 2, row = (i - top) / 2;
++		int x = col * (w / 2) + 3, ty = y + row * pitch + 4, cw = w / 2 - 6, ch = pitch - 8;
++		bool focus = i == l->focus;
++		color_t bg = focus ? ui_col.focus : ui_col.hint_bg;
++		color_t fg = focus ? ui_col.focus_fg : (it.flags & UI_ITEM_DIM) ? ui_col.dim : ui_col.fg;
++		gfx_fill(x, ty, cw, ch, bg);
++		// Corner brackets: the card as a target frame
++		color_t br = focus ? ui_col.focus_fg : ui_col.dim;
++		int bl = 7;
++		gfx_hline(x, ty, bl, br); gfx_vline(x, ty, bl, br);
++		gfx_hline(x + cw - bl, ty, bl, br); gfx_vline(x + cw - 1, ty, bl, br);
++		gfx_hline(x, ty + ch - 1, bl, br); gfx_vline(x, ty + ch - bl, bl, br);
++		gfx_hline(x + cw - bl, ty + ch - 1, bl, br); gfx_vline(x + cw - 1, ty + ch - bl, bl, br);
++		// The hardware's direct key, large and top left, as a stencilled number
++		char key[2] = { it.num, 0 };
++		if (key[0])
++			gfx_text(L->medium, x + 6, ty + 4, key, focus ? fg : ui_col.chnum);
++		char fit[48];
++		const font_t *lf = gfx_text_width(f, it.label) <= cw - 10 ? f : L->tiny;
++		if (gfx_text_width(lf, it.label) > cw - 10)
++			lf = &font_aa_6x12;
++		int ly = ty + ch / 2 - lf->h / 2 + 4;
++		const char *rest = wrap_line(lf, it.label, cw - 10, fit, sizeof fit);
++		gfx_text(lf, x + (cw - gfx_text_width(lf, fit)) / 2, ly, fit, fg);
++		if (*rest) {
++			gfx_text_fit(lf, rest, cw - 10, fit, sizeof fit);
++			gfx_text(lf, x + (cw - gfx_text_width(lf, fit)) / 2, ly + lf->h, fit, fg);
++		} else if (it.value[0]) {
++			gfx_text_fit(L->tiny, it.value, cw - 10, fit, sizeof fit);
++			gfx_text(L->tiny, x + (cw - gfx_text_width(L->tiny, fit)) / 2, ly + lf->h + 2, fit,
++				 focus ? fg : ui_col.dim);
++		}
++	}
++	if (top > 0)
++		gfx_fill(w - 3, y, 3, 3, ui_col.dim);
++	if (top + capacity < l->count)
++		gfx_fill(w - 3, bottom - 4, 3, 3, ui_col.dim);
++}
+ #endif
+ 
+ void ui_draw_list(const radio_view_t *v, const ui_state_t *s, const ui_list_t *l)
+@@ -4202,8 +4474,11 @@ void ui_draw_list(const radio_view_t *v, const ui_state_t *s, const ui_list_t *l
+ 		row_h += 6;
+ #endif
+ #if CONFIG_UI_KAWAII
+-	if (kawaii() && l->grid && l->body == NULL && l->count > 0) {
+-		kawaii_grid(l, y, y_end);
++	if ((kawaii() || tac_grid()) && l->grid && l->body == NULL && l->count > 0) {
++		if (kawaii())
++			kawaii_grid(l, y, y_end);
++		else
++			tactical_grid(l, y, y_end);
+ 		ui_draw_banner(s);
+ 		ui_draw_bottom(s, l->hint);
+ 		return;
 diff --git a/core/ui/ui_svc.h b/core/ui/ui_svc.h
 index 5fc1c7b..fda244a 100644
 --- a/core/ui/ui_svc.h
