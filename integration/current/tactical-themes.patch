@@ -83,35 +83,55 @@ index e6f3e78..df10da4 100644
  msgctxt "SET_VALUE_THEME_DARK"
  msgid "Dark"
 diff --git a/core/ui/ui_menus.c b/core/ui/ui_menus.c
-index 11479dc..62a1e13 100644
+index 11479dc..61095f3 100644
 --- a/core/ui/ui_menus.c
 +++ b/core/ui/ui_menus.c
-@@ -7971,9 +7971,10 @@ static const tr_id_t n_backlight[] = { TRX(SET_VALUE_BACKLIGHT_5S_20S, "5s/20s")
+@@ -7971,9 +7971,9 @@ static const tr_id_t n_backlight[] = { TRX(SET_VALUE_BACKLIGHT_5S_20S, "5s/20s")
  };
  #if CONFIG_UI_COLOR
  #if CONFIG_UI_KAWAII
 -static const int16_t v_style[] = { UI_STYLE_PINK, UI_STYLE_RADIOFOUNDRY, UI_STYLE_CENTERED };
-+static const int16_t v_style[] = { UI_STYLE_PINK, UI_STYLE_RADIOFOUNDRY, UI_STYLE_CENTERED, UI_STYLE_TACTICAL, UI_STYLE_FIELD };
- static const tr_id_t n_style[] = { TRN(SET_VALUE_ACCENT_PINK, "Pink"), TRX(SET_VALUE_STYLE_CLASSIC, "RadioFoundry"),
+-static const tr_id_t n_style[] = { TRN(SET_VALUE_ACCENT_PINK, "Pink"), TRX(SET_VALUE_STYLE_CLASSIC, "RadioFoundry"),
 -	TRN(SET_VALUE_STYLE_CENTERED, "Centered Home") };
-+	TRN(SET_VALUE_STYLE_CENTERED, "Centered Home"), TRN(SET_VALUE_STYLE_TACTICAL, "Tactical"),
-+	TRN(SET_VALUE_STYLE_FIELD, "Field Drab") };
++static const int16_t v_style[] = { UI_STYLE_TACTICAL, UI_STYLE_FIELD, UI_STYLE_RADIOFOUNDRY, UI_STYLE_CENTERED };
++static const tr_id_t n_style[] = { TRN(SET_VALUE_STYLE_TACTICAL, "Tactical"), TRN(SET_VALUE_STYLE_FIELD, "Field Drab"),
++	TRX(SET_VALUE_STYLE_CLASSIC, "RadioFoundry"), TRN(SET_VALUE_STYLE_CENTERED, "Centered Home") };
  #endif
  static const int16_t v_theme[] = { 0, 1, 2 };
  static const tr_id_t n_theme[] = {
-@@ -8263,7 +8264,7 @@ static const set_item_t s_display[] = {
+@@ -8263,7 +8263,7 @@ static const set_item_t s_display[] = {
  		UI_SET_LABEL_FIRST),
  #endif
  #if CONFIG_UI_COLOR && CONFIG_UI_KAWAII
 -	LIST(TRN(SET_LABEL_VISUAL_STYLE, "Visual style"), "classic theme pink centered home estilo", UI_SET_CLASSIC_STYLE,
-+	LIST(TRN(SET_LABEL_VISUAL_STYLE, "Visual style"), "classic theme pink centered home tactical night vision field drab olive estilo", UI_SET_CLASSIC_STYLE,
++	LIST(TRN(SET_LABEL_VISUAL_STYLE, "Visual style"), "classic theme centered home tactical night vision field drab olive estilo", UI_SET_CLASSIC_STYLE,
  		v_style, n_style),
  	TOGGLE(TRN(SET_LABEL_LARGE_CHANNEL_NAME, "Large channel name"), "Home Pink frequency name", UI_SET_HOME_NAME_FIRST),
  #endif
 diff --git a/core/ui/ui_screens.c b/core/ui/ui_screens.c
-index d722143..5ce0557 100644
+index d722143..beeeff8 100644
 --- a/core/ui/ui_screens.c
 +++ b/core/ui/ui_screens.c
+@@ -46,7 +46,7 @@ static bool ui_strip_fill;
+ #define ROSE_INK RGB565(82, 36, 62)
+ #define ROSE_ACCENT RGB565(165, 41, 100)
+ 
+-static uint8_t ui_style;
++static uint8_t ui_style = UI_STYLE_TACTICAL;	// before the setting is read (the loader screen): Tactical, never Pink
+ static bool home_name_first;
+ 
+ bool ui_style_available(void)
+@@ -56,8 +56,8 @@ bool ui_style_available(void)
+ 
+ void ui_visual_style_set(uint8_t style)
+ {
+-	if (style >= UI_STYLE_COUNT)
+-		style = UI_STYLE_PINK;
++	if (style >= UI_STYLE_COUNT || style == UI_STYLE_PINK)
++		style = UI_STYLE_TACTICAL;	// Pink is retired: its drawing stays in the source, never shown
+ 	if (ui_style != style) {
+ 		ui_style = style;
+ 		ui_layout_init();
 @@ -79,6 +79,47 @@ static bool centered_home(void)
  	return ui_style == UI_STYLE_CENTERED && ui_style_available();
  }
@@ -389,3 +409,26 @@ index 5fc1c7b..fda244a 100644
  
  // UI_SET_ACCENT values: the theme's own highlight (blue), or one of seven. Color displays only
  enum {
+diff --git a/core/ui/ui_svc_storage.c b/core/ui/ui_svc_storage.c
+index 5b55a44..6332983 100644
+--- a/core/ui/ui_svc_storage.c
++++ b/core/ui/ui_svc_storage.c
+@@ -283,7 +283,8 @@ int32_t ui_svc_setting_get(uint8_t id)
+ #if CONFIG_UI_KAWAII
+ 	case UI_SET_CLASSIC_STYLE:
+ 		settings_read(&st);
+-		return st.classic_style < UI_STYLE_COUNT ? st.classic_style : UI_STYLE_PINK;
++		// Pink is retired: a radio that had it (or nothing yet) starts in Tactical
++		return st.classic_style < UI_STYLE_COUNT && st.classic_style != UI_STYLE_PINK ? st.classic_style : UI_STYLE_TACTICAL;
+ 	case UI_SET_HOME_NAME_FIRST:
+ 		settings_read(&st);
+ 		return st.home_name_first == 1;
+@@ -534,7 +535,7 @@ bool ui_svc_setting_set(uint8_t id, int32_t value)
+ #if CONFIG_UI_KAWAII
+ 	case UI_SET_CLASSIC_STYLE:
+ 		st = settings_begin();
+-		st->classic_style = value >= 0 && value < UI_STYLE_COUNT ? (uint8_t)value : UI_STYLE_PINK;
++		st->classic_style = value > UI_STYLE_PINK && value < UI_STYLE_COUNT ? (uint8_t)value : UI_STYLE_TACTICAL;
+ 		settings_end(hal_millis());
+ 		return true;
+ 	case UI_SET_HOME_NAME_FIRST:
