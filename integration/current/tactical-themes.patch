@@ -143,10 +143,10 @@ index e6f3e78..ec52fe9 100644
  msgctxt "SET_VALUE_THEME_DARK"
  msgid "Dark"
 diff --git a/core/ui/ui_menus.c b/core/ui/ui_menus.c
-index 11479dc..5ecbd66 100644
+index 11479dc..596430b 100644
 --- a/core/ui/ui_menus.c
 +++ b/core/ui/ui_menus.c
-@@ -7971,19 +7971,45 @@ static const tr_id_t n_backlight[] = { TRX(SET_VALUE_BACKLIGHT_5S_20S, "5s/20s")
+@@ -7971,19 +7971,63 @@ static const tr_id_t n_backlight[] = { TRX(SET_VALUE_BACKLIGHT_5S_20S, "5s/20s")
  };
  #if CONFIG_UI_COLOR
  #if CONFIG_UI_KAWAII
@@ -154,10 +154,20 @@ index 11479dc..5ecbd66 100644
 -static const tr_id_t n_style[] = { TRN(SET_VALUE_ACCENT_PINK, "Pink"), TRX(SET_VALUE_STYLE_CLASSIC, "RadioFoundry"),
 -	TRN(SET_VALUE_STYLE_CENTERED, "Centered Home") };
 +static const int16_t v_style[] = { UI_STYLE_TACTICAL, UI_STYLE_FIELD, UI_STYLE_AVIONICS, UI_STYLE_THERMAL, UI_STYLE_PANEL,
-+				    UI_STYLE_RADIOFOUNDRY, UI_STYLE_CENTERED };
++				    UI_STYLE_HAM, UI_STYLE_MUSCLE, UI_STYLE_WORKSHOP, UI_STYLE_MISSION, UI_STYLE_BACKCOUNTRY,
++				    UI_STYLE_WHISKEY, UI_STYLE_STORM, UI_STYLE_RETRO, UI_STYLE_RADIOFOUNDRY, UI_STYLE_CENTERED };
 +static const tr_id_t n_style[] = { TRN(SET_VALUE_STYLE_TACTICAL, "Tactical"), TRN(SET_VALUE_STYLE_FIELD, "Field Drab"),
 +	TRX(SET_VALUE_STYLE_AVIONICS, "Avionics"), TRX(SET_VALUE_STYLE_THERMAL, "Thermal"),
 +	TRX(SET_VALUE_STYLE_PANEL, "Instrument panel"),
++	TRX(SET_VALUE_STYLE_HAM, "Ham shack"),
++	TRX(SET_VALUE_STYLE_MUSCLE, "Muscle car"),
++	TRX(SET_VALUE_STYLE_WORKSHOP, "Workshop"),
++	TRX(SET_VALUE_STYLE_MISSION, "Mission control"),
++	TRX(SET_VALUE_STYLE_BACKCOUNTRY, "Backcountry"),
++	TRX(SET_VALUE_STYLE_WHISKEY, "Whiskey & leather"),
++	TRX(SET_VALUE_STYLE_STORM, "Storm"),
++	TRX(SET_VALUE_STYLE_RETRO, "Retro terminal"),
++
 +	TRX(SET_VALUE_STYLE_CLASSIC, "RadioFoundry"), TRN(SET_VALUE_STYLE_CENTERED, "Centered Home") };
  #endif
  static const int16_t v_theme[] = { 0, 1, 2 };
@@ -196,11 +206,19 @@ index 11479dc..5ecbd66 100644
 +static const tr_id_t n_variant_panel[] = { TRX(SET_VALUE_VARIANT_BLACK_PANEL, "Black panel"),
 +	TRX(SET_VALUE_VARIANT_OD_PANEL, "OD panel"), TRX(SET_VALUE_VARIANT_TAN_PANEL, "Tan panel"),
 +	TRX(SET_VALUE_VARIANT_GUNMETAL, "Gunmetal") };
++static const tr_id_t n_variant_ham[] = { TRX(SET_VALUE_VARIANT_NIXIE, "Nixie"), TRX(SET_VALUE_VARIANT_BAKELITE, "Bakelite"), TRX(SET_VALUE_VARIANT_DIAL_LAMP, "Dial lamp") };
++static const tr_id_t n_variant_muscle[] = { TRX(SET_VALUE_VARIANT_REDLINE, "Redline"), TRX(SET_VALUE_VARIANT_CHROME, "Chrome"), TRX(SET_VALUE_VARIANT_RACING_GREEN, "Racing green"), TRX(SET_VALUE_VARIANT_ENDURANCE, "Endurance") };
++static const tr_id_t n_variant_workshop[] = { TRX(SET_VALUE_VARIANT_HAZARD, "Hazard"), TRX(SET_VALUE_VARIANT_SAFETY_GREEN, "Safety green"), TRX(SET_VALUE_VARIANT_BLUEPRINT, "Blueprint") };
++static const tr_id_t n_variant_mission[] = { TRX(SET_VALUE_VARIANT_CONSOLE, "Console"), TRX(SET_VALUE_VARIANT_LAUNCH_AMBER, "Launch amber"), TRX(SET_VALUE_VARIANT_DEEP_SPACE, "Deep space") };
++static const tr_id_t n_variant_backcountry[] = { TRX(SET_VALUE_VARIANT_BLAZE_ORANGE, "Blaze orange"), TRX(SET_VALUE_VARIANT_TIMBER, "Timber"), TRX(SET_VALUE_VARIANT_TOPO_MAP, "Topo map") };
++static const tr_id_t n_variant_whiskey[] = { TRX(SET_VALUE_VARIANT_BOURBON, "Bourbon"), TRX(SET_VALUE_VARIANT_OXBLOOD, "Oxblood"), TRX(SET_VALUE_VARIANT_TOBACCO, "Tobacco") };
++static const tr_id_t n_variant_storm[] = { TRX(SET_VALUE_VARIANT_RADAR, "Radar"), TRX(SET_VALUE_VARIANT_SUPERCELL, "Supercell"), TRX(SET_VALUE_VARIANT_LIGHTNING, "Lightning") };
++static const tr_id_t n_variant_retro[] = { TRX(SET_VALUE_VARIANT_BLUE_BASIC, "Blue BASIC"), TRX(SET_VALUE_VARIANT_CGA, "CGA"), TRX(SET_VALUE_VARIANT_DOS_BLUE, "DOS blue") };
 +#endif
  static const int16_t v_accent[] = { UI_ACCENT_DEFAULT, UI_ACCENT_RED, UI_ACCENT_ORANGE, UI_ACCENT_YELLOW, UI_ACCENT_TEAL,
  				     UI_ACCENT_BLUE, UI_ACCENT_PURPLE, UI_ACCENT_PINK };
  static const tr_id_t n_accent[] = { TRN(VALUE_DEFAULT, "Default"), TRN(SET_VALUE_ACCENT_RED, "Red"),
-@@ -8173,6 +8199,9 @@ static const tr_id_t n_ptype[] = { TRN(VALUE_OFF, "Off"), TRX(VALUE_MOTOROLA, "M
+@@ -8173,6 +8217,9 @@ static const tr_id_t n_ptype[] = { TRN(VALUE_OFF, "Off"), TRX(VALUE_MOTOROLA, "M
  #define TOGGLE(nm, syn_, sid) { nm, syn_, ST_TOGGLE, sid, 0, { { 0, 1, 1, NULL } } }
  #define NUMBER(nm, syn_, sid, lo, hi, st, u) { nm, syn_, ST_NUMBER, sid, 0, { { lo, hi, st, u } } }
  #define LIST(nm, syn_, sid, v, nms) { nm, syn_, ST_LIST, sid, sizeof v / sizeof v[0], { .values = v, .names = nms } }
@@ -210,7 +228,7 @@ index 11479dc..5ecbd66 100644
  #define ACTION(nm, syn_, a) { nm, syn_, ST_ACTION, a, 0, { { 0, 0, 0, NULL } } }
  
  static const int16_t v_zone_scan_dwell[] = { 25, 50, 75, 100, 150, 250, 500 };
-@@ -8253,7 +8282,17 @@ static const set_item_t s_display[] = {
+@@ -8253,7 +8300,25 @@ static const set_item_t s_display[] = {
  		n_backlight),
  #if CONFIG_UI_COLOR	// a radio whose only screen is monochrome has no colors to set: no rows for them
  	LIST(TRN(SET_LABEL_THEME, "Theme"), "contrast", UI_SET_THEME, v_theme, n_theme),
@@ -224,11 +242,19 @@ index 11479dc..5ecbd66 100644
 +	VARIANTS("avionics mfd hud radar cockpit", n_variant_avionics),
 +	VARIANTS("thermal flir white hot ironbow arctic lava", n_variant_thermal),
 +	VARIANTS("instrument panel black od tan gunmetal", n_variant_panel),
++	VARIANTS("ham shack nixie bakelite dial lamp", n_variant_ham),
++	VARIANTS("muscle car redline chrome racing green endurance", n_variant_muscle),
++	VARIANTS("workshop hazard safety green blueprint", n_variant_workshop),
++	VARIANTS("mission control console launch amber deep space", n_variant_mission),
++	VARIANTS("backcountry blaze orange timber topo map", n_variant_backcountry),
++	VARIANTS("whiskey leather bourbon oxblood tobacco", n_variant_whiskey),
++	VARIANTS("storm radar supercell lightning", n_variant_storm),
++	VARIANTS("retro terminal blue basic cga dos blue", n_variant_retro),
 +#endif
  	TOGGLE(TRN(SET_LABEL_FILLED_STATUS_BAR, "Filled status bar"), "top line", UI_SET_STRIP),
  #endif
  	TOGGLE(TRN(SET_LABEL_LARGE_TEXT, "Large text"), "accessibility", UI_SET_LARGE_TEXT),
-@@ -8263,7 +8302,7 @@ static const set_item_t s_display[] = {
+@@ -8263,7 +8328,7 @@ static const set_item_t s_display[] = {
  		UI_SET_LABEL_FIRST),
  #endif
  #if CONFIG_UI_COLOR && CONFIG_UI_KAWAII
@@ -237,7 +263,7 @@ index 11479dc..5ecbd66 100644
  		v_style, n_style),
  	TOGGLE(TRN(SET_LABEL_LARGE_CHANNEL_NAME, "Large channel name"), "Home Pink frequency name", UI_SET_HOME_NAME_FIRST),
  #endif
-@@ -8504,6 +8543,21 @@ static uint16_t hwopt_visible(void)
+@@ -8504,6 +8569,29 @@ static uint16_t hwopt_visible(void)
  
  // Settings a radio without a battery (or a broadcast receiver, or the key) doesn't have are left out of the list, not
  // shown disabled
@@ -251,6 +277,14 @@ index 11479dc..5ecbd66 100644
 +	case UI_STYLE_AVIONICS: return n_variant_avionics;
 +	case UI_STYLE_THERMAL: return n_variant_thermal;
 +	case UI_STYLE_PANEL: return n_variant_panel;
++	case UI_STYLE_HAM: return n_variant_ham;
++	case UI_STYLE_MUSCLE: return n_variant_muscle;
++	case UI_STYLE_WORKSHOP: return n_variant_workshop;
++	case UI_STYLE_MISSION: return n_variant_mission;
++	case UI_STYLE_BACKCOUNTRY: return n_variant_backcountry;
++	case UI_STYLE_WHISKEY: return n_variant_whiskey;
++	case UI_STYLE_STORM: return n_variant_storm;
++	case UI_STYLE_RETRO: return n_variant_retro;
 +	default: return n_accent;
 +	}
 +}
@@ -259,7 +293,7 @@ index 11479dc..5ecbd66 100644
  static bool set_hidden(const set_item_t *s)
  {
  #if RFOUNDRY_HWOPTS
-@@ -8515,6 +8569,12 @@ static bool set_hidden(const set_item_t *s)
+@@ -8515,6 +8603,12 @@ static bool set_hidden(const set_item_t *s)
  		return !ui_style_available();
  	if (s->type == ST_TOGGLE && s->id == UI_SET_HOME_NAME_FIRST)
  		return !ui_home_name_first_available();
@@ -272,7 +306,7 @@ index 11479dc..5ecbd66 100644
  #endif
  #if CONFIG_KEY_ASSIGN
  	if (s->type != ST_ACTION && s->id >= UI_SET_KEY_FIRST && s->id <= UI_SET_KEY_LAST) {
-@@ -8652,12 +8712,7 @@ static void set_value_text(const set_item_t *s, int32_t v, char *out, size_t len
+@@ -8652,12 +8746,7 @@ static void set_value_text(const set_item_t *s, int32_t v, char *out, size_t len
  		sb_str(&b, v ? TR(VALUE_ON, "On") : TR(VALUE_OFF, "Off"));
  		break;
  	case ST_LIST:
@@ -286,7 +320,7 @@ index 11479dc..5ecbd66 100644
  #if CONFIG_KEY_ASSIGN
  		{
  			const char *home = home_key_default(s->id, v);
-@@ -8673,6 +8728,12 @@ static void set_value_text(const set_item_t *s, int32_t v, char *out, size_t len
+@@ -8673,6 +8762,12 @@ static void set_value_text(const set_item_t *s, int32_t v, char *out, size_t len
  				return;
  			}
  		}
@@ -300,7 +334,7 @@ index 11479dc..5ecbd66 100644
  		break;
  	case ST_NUMBER:
 diff --git a/core/ui/ui_screens.c b/core/ui/ui_screens.c
-index d722143..aedf81d 100644
+index d722143..c621314 100644
 --- a/core/ui/ui_screens.c
 +++ b/core/ui/ui_screens.c
 @@ -46,7 +46,7 @@ static bool ui_strip_fill;
@@ -323,7 +357,7 @@ index d722143..aedf81d 100644
  	if (ui_style != style) {
  		ui_style = style;
  		ui_layout_init();
-@@ -79,6 +79,190 @@ static bool centered_home(void)
+@@ -79,6 +79,356 @@ static bool centered_home(void)
  	return ui_style == UI_STYLE_CENTERED && ui_style_available();
  }
  
@@ -335,7 +369,8 @@ index d722143..aedf81d 100644
 +	color_t focus, chnum;		// the focus row (its text is bg), Home's channel number
 +	uint8_t emblem;			// the boot emblem, TAC_EM_*
 +} tac_pal_t;
-+enum { TAC_EM_RETICLE, TAC_EM_BADGE, TAC_EM_HORIZON, TAC_EM_SIGHT, TAC_EM_DIAL };
++enum { TAC_EM_RETICLE, TAC_EM_BADGE, TAC_EM_HORIZON, TAC_EM_SIGHT, TAC_EM_DIAL, TAC_EM_VU, TAC_EM_TACH, TAC_EM_GEAR,
++	TAC_EM_ORBIT, TAC_EM_COMPASS, TAC_EM_RING, TAC_EM_SWEEP, TAC_EM_PROMPT };
 +
 +// The variants (Settings > Display > Variant), stored in the highlight color setting: UI_ACCENT_DEFAULT is the first.
 +// Text on the background at least 6:1 except Red night, kept dim on purpose
@@ -484,11 +519,176 @@ index d722143..aedf81d 100644
 +	  .focus = RGB565(248, 200, 40), .chnum = RGB565(248, 200, 40), .emblem = TAC_EM_DIAL },
 +};
 +
++// Ham shack: vintage radio gear, a VU meter at boot
++static const tac_pal_t tac_ham[] = {
++	// Nixie: nixie tube orange on near-black, cream strip
++	{ .bg = RGB565(14, 8, 4), .fg = RGB565(248, 168, 72), .dim = RGB565(192, 120, 56), .line = RGB565(72, 40, 20),
++	  .tx = RGB565(248, 64, 40), .rx = RGB565(248, 216, 144), .warn = RGB565(248, 232, 96), .idle = RGB565(112, 72, 40),
++	  .hint_bg = RGB565(36, 20, 10), .priv = RGB565(168, 184, 216), .strip_bg = RGB565(232, 200, 160), .strip_warn = RGB565(120, 40, 0),
++	  .focus = RGB565(248, 144, 48), .chnum = RGB565(248, 168, 72), .emblem = TAC_EM_VU },
++	// Bakelite: cream on brown bakelite, brass selection
++	{ .bg = RGB565(36, 22, 14), .fg = RGB565(240, 228, 200), .dim = RGB565(192, 168, 128), .line = RGB565(88, 60, 40),
++	  .tx = RGB565(216, 56, 32), .rx = RGB565(176, 208, 128), .warn = RGB565(240, 184, 64), .idle = RGB565(136, 108, 80),
++	  .hint_bg = RGB565(56, 36, 24), .priv = RGB565(160, 184, 216), .strip_bg = RGB565(240, 228, 200), .strip_warn = RGB565(120, 40, 0),
++	  .focus = RGB565(216, 168, 96), .chnum = RGB565(240, 200, 120), .emblem = TAC_EM_VU },
++	// Dial lamp: warm green dial glow, aged dial paper strip, incandescent selection
++	{ .bg = RGB565(8, 14, 10), .fg = RGB565(200, 240, 184), .dim = RGB565(136, 184, 128), .line = RGB565(40, 64, 40),
++	  .tx = RGB565(232, 72, 40), .rx = RGB565(248, 216, 120), .warn = RGB565(248, 184, 64), .idle = RGB565(88, 120, 80),
++	  .hint_bg = RGB565(20, 34, 22), .priv = RGB565(160, 200, 232), .strip_bg = RGB565(216, 200, 144), .strip_warn = RGB565(112, 40, 0),
++	  .focus = RGB565(248, 200, 104), .chnum = RGB565(200, 240, 184), .emblem = TAC_EM_VU },
++};
++
++// Muscle car: a gauge cluster, a tachometer at boot
++static const tac_pal_t tac_muscle[] = {
++	// Redline: white gauges, chrome strip, redline selection
++	{ .bg = RGB565(10, 10, 12), .fg = RGB565(240, 240, 240), .dim = RGB565(168, 168, 176), .line = RGB565(64, 64, 72),
++	  .tx = RGB565(248, 48, 32), .rx = RGB565(120, 216, 248), .warn = RGB565(248, 200, 48), .idle = RGB565(104, 104, 112),
++	  .hint_bg = RGB565(28, 28, 32), .priv = RGB565(144, 176, 248), .strip_bg = RGB565(200, 204, 212), .strip_warn = RGB565(128, 0, 0),
++	  .focus = RGB565(240, 64, 48), .chnum = RGB565(248, 72, 48), .emblem = TAC_EM_TACH },
++	// Chrome: bright chrome on gunmetal
++	{ .bg = RGB565(24, 26, 30), .fg = RGB565(248, 248, 248), .dim = RGB565(184, 188, 196), .line = RGB565(80, 84, 92),
++	  .tx = RGB565(232, 48, 32), .rx = RGB565(136, 216, 168), .warn = RGB565(248, 192, 48), .idle = RGB565(120, 124, 132),
++	  .hint_bg = RGB565(40, 42, 48), .priv = RGB565(152, 184, 240), .strip_bg = RGB565(224, 228, 236), .strip_warn = RGB565(120, 40, 0),
++	  .focus = RGB565(200, 208, 224), .chnum = RGB565(224, 228, 236), .emblem = TAC_EM_TACH },
++	// Racing green: cream and gold on British racing green
++	{ .bg = RGB565(6, 22, 14), .fg = RGB565(240, 232, 208), .dim = RGB565(168, 184, 152), .line = RGB565(32, 72, 48),
++	  .tx = RGB565(232, 64, 40), .rx = RGB565(184, 232, 152), .warn = RGB565(240, 192, 64), .idle = RGB565(96, 128, 104),
++	  .hint_bg = RGB565(16, 40, 26), .priv = RGB565(160, 200, 232), .strip_bg = RGB565(232, 220, 184), .strip_warn = RGB565(112, 40, 0),
++	  .focus = RGB565(216, 184, 96), .chnum = RGB565(216, 184, 96), .emblem = TAC_EM_TACH },
++	// Endurance: powder blue and orange endurance racing livery
++	{ .bg = RGB565(10, 20, 32), .fg = RGB565(240, 244, 248), .dim = RGB565(152, 192, 216), .line = RGB565(40, 64, 88),
++	  .tx = RGB565(232, 56, 32), .rx = RGB565(168, 232, 168), .warn = RGB565(248, 200, 64), .idle = RGB565(96, 128, 152),
++	  .hint_bg = RGB565(20, 36, 54), .priv = RGB565(176, 168, 248), .strip_bg = RGB565(152, 200, 232), .strip_warn = RGB565(120, 40, 0),
++	  .focus = RGB565(248, 136, 40), .chnum = RGB565(248, 136, 40), .emblem = TAC_EM_TACH },
++};
++
++// Workshop: industrial safety colors, a gear at boot
++static const tac_pal_t tac_workshop[] = {
++	// Hazard: hazard yellow on black
++	{ .bg = RGB565(16, 16, 14), .fg = RGB565(240, 236, 224), .dim = RGB565(176, 172, 160), .line = RGB565(72, 70, 64),
++	  .tx = RGB565(232, 48, 32), .rx = RGB565(136, 216, 120), .warn = RGB565(248, 144, 32), .idle = RGB565(112, 110, 104),
++	  .hint_bg = RGB565(34, 34, 30), .priv = RGB565(144, 184, 232), .strip_bg = RGB565(248, 208, 24), .strip_warn = RGB565(136, 24, 0),
++	  .focus = RGB565(248, 208, 24), .chnum = RGB565(248, 208, 24), .emblem = TAC_EM_GEAR },
++	// Safety green: hi-vis lime on dark green-gray
++	{ .bg = RGB565(12, 18, 14), .fg = RGB565(232, 240, 232), .dim = RGB565(168, 184, 168), .line = RGB565(56, 72, 60),
++	  .tx = RGB565(232, 56, 32), .rx = RGB565(184, 248, 96), .warn = RGB565(248, 200, 48), .idle = RGB565(100, 116, 104),
++	  .hint_bg = RGB565(26, 36, 28), .priv = RGB565(152, 184, 232), .strip_bg = RGB565(136, 232, 104), .strip_warn = RGB565(96, 24, 0),
++	  .focus = RGB565(184, 248, 96), .chnum = RGB565(184, 248, 96), .emblem = TAC_EM_GEAR },
++	// Blueprint: white lines on blueprint blue
++	{ .bg = RGB565(8, 32, 72), .fg = RGB565(232, 240, 248), .dim = RGB565(152, 184, 224), .line = RGB565(48, 80, 136),
++	  .tx = RGB565(248, 96, 72), .rx = RGB565(168, 240, 200), .warn = RGB565(248, 216, 96), .idle = RGB565(104, 136, 184),
++	  .hint_bg = RGB565(20, 48, 96), .priv = RGB565(200, 200, 248), .strip_bg = RGB565(216, 228, 248), .strip_warn = RGB565(120, 40, 0),
++	  .focus = RGB565(232, 240, 248), .chnum = RGB565(248, 248, 248), .emblem = TAC_EM_GEAR },
++};
++
++// Mission control: space program consoles, an orbit at boot
++static const tac_pal_t tac_mission[] = {
++	// Console: white on charcoal, amber numbers
++	{ .bg = RGB565(28, 30, 32), .fg = RGB565(240, 240, 236), .dim = RGB565(168, 170, 168), .line = RGB565(72, 74, 76),
++	  .tx = RGB565(232, 56, 40), .rx = RGB565(128, 216, 128), .warn = RGB565(248, 192, 48), .idle = RGB565(112, 114, 116),
++	  .hint_bg = RGB565(44, 46, 48), .priv = RGB565(144, 184, 240), .strip_bg = RGB565(200, 200, 196), .strip_warn = RGB565(120, 40, 0),
++	  .focus = RGB565(248, 248, 244), .chnum = RGB565(248, 192, 48), .emblem = TAC_EM_ORBIT },
++	// Launch amber: countdown amber with white readouts
++	{ .bg = RGB565(12, 10, 6), .fg = RGB565(248, 200, 96), .dim = RGB565(200, 152, 72), .line = RGB565(72, 56, 28),
++	  .tx = RGB565(248, 72, 40), .rx = RGB565(232, 232, 200), .warn = RGB565(248, 240, 160), .idle = RGB565(120, 96, 56),
++	  .hint_bg = RGB565(34, 28, 16), .priv = RGB565(200, 184, 232), .strip_bg = RGB565(248, 200, 96), .strip_warn = RGB565(96, 24, 0),
++	  .focus = RGB565(248, 232, 184), .chnum = RGB565(248, 232, 184), .emblem = TAC_EM_ORBIT },
++	// Deep space: pale blue on black, violet selection, cyan numbers
++	{ .bg = RGB565(4, 4, 16), .fg = RGB565(224, 232, 248), .dim = RGB565(144, 152, 216), .line = RGB565(40, 40, 96),
++	  .tx = RGB565(248, 80, 64), .rx = RGB565(128, 232, 232), .warn = RGB565(248, 208, 96), .idle = RGB565(88, 88, 152),
++	  .hint_bg = RGB565(16, 16, 44), .priv = RGB565(200, 144, 248), .strip_bg = RGB565(168, 176, 240), .strip_warn = RGB565(48, 0, 80),
++	  .focus = RGB565(200, 144, 248), .chnum = RGB565(128, 232, 232), .emblem = TAC_EM_ORBIT },
++};
++
++// Backcountry: hunting and the outdoors, a compass rose at boot
++static const tac_pal_t tac_backcountry[] = {
++	// Blaze orange: blaze orange on dark field green
++	{ .bg = RGB565(20, 22, 16), .fg = RGB565(232, 228, 212), .dim = RGB565(168, 164, 140), .line = RGB565(72, 72, 56),
++	  .tx = RGB565(216, 40, 24), .rx = RGB565(168, 208, 112), .warn = RGB565(248, 200, 48), .idle = RGB565(112, 110, 92),
++	  .hint_bg = RGB565(38, 40, 30), .priv = RGB565(144, 176, 208), .strip_bg = RGB565(248, 120, 24), .strip_warn = RGB565(0, 32, 96),
++	  .focus = RGB565(248, 120, 24), .chnum = RGB565(248, 120, 24), .emblem = TAC_EM_COMPASS },
++	// Timber: bark brown, moss green strip, pine tan selection
++	{ .bg = RGB565(26, 20, 14), .fg = RGB565(228, 216, 188), .dim = RGB565(168, 152, 120), .line = RGB565(76, 62, 44),
++	  .tx = RGB565(208, 56, 32), .rx = RGB565(152, 192, 104), .warn = RGB565(232, 168, 56), .idle = RGB565(120, 104, 80),
++	  .hint_bg = RGB565(44, 36, 26), .priv = RGB565(144, 176, 200), .strip_bg = RGB565(152, 184, 104), .strip_warn = RGB565(72, 24, 0),
++	  .focus = RGB565(200, 152, 96), .chnum = RGB565(176, 208, 120), .emblem = TAC_EM_COMPASS },
++	// Topo map: map paper text, contour brown selection, water blue numbers
++	{ .bg = RGB565(16, 24, 20), .fg = RGB565(236, 232, 212), .dim = RGB565(176, 160, 128), .line = RGB565(88, 104, 72),
++	  .tx = RGB565(216, 48, 32), .rx = RGB565(136, 200, 232), .warn = RGB565(240, 176, 64), .idle = RGB565(120, 128, 104),
++	  .hint_bg = RGB565(32, 42, 34), .priv = RGB565(152, 176, 224), .strip_bg = RGB565(216, 204, 168), .strip_warn = RGB565(112, 40, 0),
++	  .focus = RGB565(200, 120, 72), .chnum = RGB565(136, 200, 232), .emblem = TAC_EM_COMPASS },
++};
++
++// Whiskey and leather: walnut, saddle brown and brass, a brass ring at boot
++static const tac_pal_t tac_whiskey[] = {
++	// Bourbon: cream on dark walnut, bourbon amber strip, brass selection
++	{ .bg = RGB565(24, 14, 6), .fg = RGB565(244, 224, 184), .dim = RGB565(200, 160, 104), .line = RGB565(88, 56, 24),
++	  .tx = RGB565(216, 48, 32), .rx = RGB565(200, 208, 128), .warn = RGB565(248, 176, 48), .idle = RGB565(136, 100, 60),
++	  .hint_bg = RGB565(44, 26, 12), .priv = RGB565(176, 184, 216), .strip_bg = RGB565(216, 152, 64), .strip_warn = RGB565(64, 16, 0),
++	  .focus = RGB565(224, 184, 104), .chnum = RGB565(232, 168, 80), .emblem = TAC_EM_RING },
++	// Oxblood: cream on oxblood leather, brass selection
++	{ .bg = RGB565(28, 8, 8), .fg = RGB565(240, 224, 208), .dim = RGB565(192, 152, 136), .line = RGB565(88, 32, 32),
++	  .tx = RGB565(248, 248, 240), .rx = RGB565(216, 200, 136), .warn = RGB565(240, 176, 64), .idle = RGB565(136, 80, 72),
++	  .hint_bg = RGB565(48, 16, 16), .priv = RGB565(184, 168, 216), .strip_bg = RGB565(200, 104, 88), .strip_warn = RGB565(48, 0, 0),
++	  .focus = RGB565(224, 184, 104), .chnum = RGB565(224, 184, 104), .emblem = TAC_EM_RING },
++	// Tobacco: tobacco leaf browns and brass
++	{ .bg = RGB565(30, 24, 16), .fg = RGB565(236, 224, 196), .dim = RGB565(184, 164, 124), .line = RGB565(84, 70, 48),
++	  .tx = RGB565(216, 56, 32), .rx = RGB565(176, 192, 120), .warn = RGB565(236, 168, 56), .idle = RGB565(128, 112, 84),
++	  .hint_bg = RGB565(48, 40, 28), .priv = RGB565(160, 176, 204), .strip_bg = RGB565(184, 148, 96), .strip_warn = RGB565(72, 24, 0),
++	  .focus = RGB565(212, 176, 112), .chnum = RGB565(212, 176, 112), .emblem = TAC_EM_RING },
++};
++
++// Storm: weather radar, a radar sweep at boot
++static const tac_pal_t tac_storm[] = {
++	// Radar: radar echo green, yellow selection
++	{ .bg = RGB565(4, 10, 12), .fg = RGB565(224, 240, 232), .dim = RGB565(136, 176, 168), .line = RGB565(32, 64, 60),
++	  .tx = RGB565(248, 56, 40), .rx = RGB565(96, 224, 96), .warn = RGB565(248, 224, 64), .idle = RGB565(80, 112, 108),
++	  .hint_bg = RGB565(14, 28, 30), .priv = RGB565(200, 120, 248), .strip_bg = RGB565(96, 224, 96), .strip_warn = RGB565(96, 0, 0),
++	  .focus = RGB565(248, 224, 64), .chnum = RGB565(96, 224, 96), .emblem = TAC_EM_SWEEP },
++	// Supercell: bruised sky gray-violet, eerie green selection
++	{ .bg = RGB565(18, 18, 28), .fg = RGB565(232, 232, 240), .dim = RGB565(160, 160, 184), .line = RGB565(64, 64, 96),
++	  .tx = RGB565(248, 64, 48), .rx = RGB565(120, 216, 168), .warn = RGB565(248, 200, 64), .idle = RGB565(104, 104, 136),
++	  .hint_bg = RGB565(32, 32, 52), .priv = RGB565(200, 144, 248), .strip_bg = RGB565(176, 168, 216), .strip_warn = RGB565(64, 0, 64),
++	  .focus = RGB565(120, 216, 168), .chnum = RGB565(120, 216, 168), .emblem = TAC_EM_SWEEP },
++	// Lightning: white on night blue, electric yellow selection
++	{ .bg = RGB565(6, 6, 20), .fg = RGB565(240, 240, 248), .dim = RGB565(168, 168, 216), .line = RGB565(48, 48, 96),
++	  .tx = RGB565(248, 72, 48), .rx = RGB565(160, 224, 248), .warn = RGB565(248, 232, 96), .idle = RGB565(96, 96, 152),
++	  .hint_bg = RGB565(20, 20, 44), .priv = RGB565(216, 168, 248), .strip_bg = RGB565(224, 224, 248), .strip_warn = RGB565(64, 0, 96),
++	  .focus = RGB565(248, 240, 128), .chnum = RGB565(160, 224, 248), .emblem = TAC_EM_SWEEP },
++};
++
++// Retro terminal: home computer palettes, a READY prompt at boot
++static const tac_pal_t tac_retro[] = {
++	// Blue BASIC: light blue on blue, as an 80s home computer
++	{ .bg = RGB565(40, 40, 160), .fg = RGB565(168, 168, 248), .dim = RGB565(144, 144, 240), .line = RGB565(72, 72, 200),
++	  .tx = RGB565(248, 104, 104), .rx = RGB565(160, 248, 160), .warn = RGB565(248, 248, 128), .idle = RGB565(112, 112, 216),
++	  .hint_bg = RGB565(56, 56, 184), .priv = RGB565(248, 200, 248), .strip_bg = RGB565(168, 168, 248), .strip_warn = RGB565(32, 0, 96),
++	  .focus = RGB565(168, 168, 248), .chnum = RGB565(248, 248, 248), .emblem = TAC_EM_PROMPT },
++	// CGA: cyan and magenta on black, four colors and proud
++	{ .bg = RGB565(0, 0, 0), .fg = RGB565(248, 248, 248), .dim = RGB565(80, 248, 248), .line = RGB565(0, 168, 168),
++	  .tx = RGB565(248, 80, 80), .rx = RGB565(80, 248, 80), .warn = RGB565(248, 248, 80), .idle = RGB565(168, 168, 168),
++	  .hint_bg = RGB565(0, 0, 64), .priv = RGB565(248, 80, 248), .strip_bg = RGB565(80, 248, 248), .strip_warn = RGB565(168, 0, 168),
++	  .focus = RGB565(248, 80, 248), .chnum = RGB565(80, 248, 248), .emblem = TAC_EM_PROMPT },
++	// DOS blue: white on deep blue, cyan bar, yellow numbers, as a text-mode file manager
++	{ .bg = RGB565(0, 0, 168), .fg = RGB565(248, 248, 248), .dim = RGB565(168, 168, 168), .line = RGB565(0, 0, 248),
++	  .tx = RGB565(248, 80, 80), .rx = RGB565(80, 248, 80), .warn = RGB565(248, 248, 80), .idle = RGB565(128, 128, 168),
++	  .hint_bg = RGB565(0, 0, 120), .priv = RGB565(80, 248, 248), .strip_bg = RGB565(0, 168, 168), .strip_warn = RGB565(0, 0, 80),
++	  .focus = RGB565(0, 168, 168), .chnum = RGB565(248, 248, 80), .emblem = TAC_EM_PROMPT },
++};
++
 +#define TAC_N(a) ((uint8_t)(sizeof a / sizeof a[0]))
 +static const struct { uint8_t style, n; const tac_pal_t *v; } tac_styles[] = {
 +	{ UI_STYLE_TACTICAL, TAC_N(tac_nvg), tac_nvg }, { UI_STYLE_FIELD, TAC_N(tac_field), tac_field },
 +	{ UI_STYLE_AVIONICS, TAC_N(tac_avionics), tac_avionics }, { UI_STYLE_THERMAL, TAC_N(tac_thermal), tac_thermal },
 +	{ UI_STYLE_PANEL, TAC_N(tac_panel), tac_panel },
++	{ UI_STYLE_HAM, TAC_N(tac_ham), tac_ham },
++	{ UI_STYLE_MUSCLE, TAC_N(tac_muscle), tac_muscle },
++	{ UI_STYLE_WORKSHOP, TAC_N(tac_workshop), tac_workshop },
++	{ UI_STYLE_MISSION, TAC_N(tac_mission), tac_mission },
++	{ UI_STYLE_BACKCOUNTRY, TAC_N(tac_backcountry), tac_backcountry },
++	{ UI_STYLE_WHISKEY, TAC_N(tac_whiskey), tac_whiskey },
++	{ UI_STYLE_STORM, TAC_N(tac_storm), tac_storm },
++	{ UI_STYLE_RETRO, TAC_N(tac_retro), tac_retro },
 +};
 +
 +static const tac_pal_t *tac_pal(void)
@@ -514,7 +714,7 @@ index d722143..aedf81d 100644
  bool ui_home_name_first_available(void)
  {
  	return kawaii();
-@@ -161,9 +345,242 @@ static void kawaii_boot(const char *board_name, const char *version, const char
+@@ -161,9 +511,475 @@ static void kawaii_boot(const char *board_name, const char *version, const char
  	sb_str(&b, version);
  	kawaii_center(ui_layout.tiny, h - ui_layout.tiny->h - 2, foot, ROSE_INK);
  }
@@ -716,6 +916,231 @@ index d722143..aedf81d 100644
 +	}
 +}
 +
++#define TAC_ABS(v) ((v) < 0 ? -(v) : (v))
++
++static int tac_isqrt(int v)
++{
++	int r = 0;
++	while (v > 0 && (r + 1) * (r + 1) <= v)
++		r++;
++	return r;
++}
++
++// Twenty-four points round a circle (15 degrees apart), sin in 1/64ths, from 12 o'clock clockwise
++static const int8_t tac_sin24[24] = { 0, 17, 32, 45, 55, 62, 64, 62, 55, 45, 32, 17, 0, -17, -32, -45, -55, -62, -64, -62, -55, -45,
++				      -32, -17 };
++#define TAC_X24(i, r) (tac_sin24[(i) % 24] * (r) / 64)
++#define TAC_Y24(i, r) (-tac_sin24[((i) + 6) % 24] * (r) / 64)
++
++static void tac_ray(int cx, int cy, int i, int r0, int r1, int w, color_t c)
++{
++	for (int k = r0; k <= r1; k++)
++		for (int d = 0; d < w; d++)
++			gfx_pixel(cx + TAC_X24(i, k) + d, cy + TAC_Y24(i, k), c);
++}
++
++// A thin line from (x0, y0) to (x1, y1), w pixels wide
++static void tac_line(int x0, int y0, int x1, int y1, int w, color_t c)
++{
++	int dx = x1 - x0, dy = y1 - y0, n = TAC_ABS(dx) > TAC_ABS(dy) ? TAC_ABS(dx) : TAC_ABS(dy);
++	for (int k = 0; k <= n; k++)
++		for (int d = 0; d < w; d++) {
++			int x = x0 + (n ? dx * k / n : 0), y = y0 + (n ? dy * k / n : 0);
++			if (TAC_ABS(dx) > TAC_ABS(dy))
++				gfx_pixel(x, y + d, c);
++			else
++				gfx_pixel(x + d, y, c);
++		}
++}
++
++// The part of a circle a gauge sweeps: all but the 120 degree wedge at the bottom
++static void tac_gauge_arc(int cx, int cy, int r, color_t c, color_t red)
++{
++	for (int y = -r; y <= r; y++)
++		for (int x = -r; x <= r; x++) {
++			int d = x * x + y * y;
++			if (d > r * r || d < (r - 2) * (r - 2))
++				continue;
++			if (y > 0 && TAC_ABS(x) * 1000 < 1732 * y)
++				continue;
++			gfx_pixel(cx + x, cy + y, x > 0 && y > -r / 2 ? red : c);	// the last stretch in red
++		}
++}
++
++// A VU meter: a cream face, a flat scale with its red end, the needle off its pivot below
++static void tac_vu(const tac_pal_t *p, int cx, int cy, int r)
++{
++	int x0 = cx - r, y0 = cy - r * 3 / 4, w = 2 * r, h = r * 3 / 2;
++	for (int y = y0; y < y0 + h; y++)
++		gfx_hline(x0, y, w, p->hint_bg);
++	for (int t = 0; t < 2; t++) {
++		gfx_hline(x0 - t, y0 - t, w + 2 * t, p->fg);
++		gfx_hline(x0 - t, y0 + h - 1 + t, w + 2 * t, p->fg);
++		gfx_vline(x0 - t, y0 - t, h + 2 * t, p->fg);
++		gfx_vline(x0 + w - 1 + t, y0 - t, h + 2 * t, p->fg);
++	}
++	int px = cx, py = y0 + h + r / 3, ar = h;		// the pivot below the face
++	for (int y = -ar; y <= 0; y++)
++		for (int x = -ar; x <= ar; x++) {
++			int d = x * x + y * y;
++			if (d > ar * ar || d < (ar - 2) * (ar - 2) || TAC_ABS(x) * 10 > -y * 9 || py + y < y0 + 4)
++				continue;
++			gfx_pixel(px + x, py + y, x * 10 > -y * 4 ? p->tx : p->fg);
++		}
++	for (int i = -3; i <= 3; i++) {			// ticks on the scale
++		int tx = px + i * ar * 2 / 19, ty = py - ar;
++		gfx_vline(tx, ty + (ar - tac_isqrt((ar * ar - (i * ar * 2 / 19) * (i * ar * 2 / 19)))), i % 3 ? 4 : 7,
++			  i > 1 ? p->tx : p->fg);
++	}
++	tac_line(px, py, px - ar / 3, py - ar + 6, 2, p->focus);	// the needle, left of center
++	tac_disc(px, y0 + h - 1, 4, p->focus);
++}
++
++// A tachometer: a gauge face, ticks round the sweep with the redline in red, the needle and its hub
++static void tac_tach(const tac_pal_t *p, int cx, int cy, int r)
++{
++	tac_disc(cx, cy, r, p->hint_bg);
++	tac_gauge_arc(cx, cy, r, p->fg, p->tx);
++	for (int k = 0; k <= 16; k++) {		// from 8 o'clock round to 4 o'clock
++		int i = (16 + k) % 24;
++		tac_ray(cx, cy, i, r - (k % 2 ? 6 : 10), r - 3, 2, k >= 13 ? p->tx : k % 2 ? p->dim : p->fg);
++	}
++	tac_line(cx, cy, cx + TAC_X24(22, r - 12), cy + TAC_Y24(22, r - 12), 3, p->focus);
++	tac_disc(cx, cy, 6, p->focus);
++	tac_disc(cx, cy, 2, p->bg);
++}
++
++// A gear: twelve teeth round a disc, a bore in the middle
++static void tac_gear(const tac_pal_t *p, int cx, int cy, int r)
++{
++	int t = r / 5;
++	for (int i = 0; i < 24; i += 2) {
++		for (int k = r * 3 / 4 - 2; k <= r; k++)	// a square-cut tooth: a short thick ray
++			for (int d = -t / 2 - 1; d <= t / 2 + 1; d++)
++				gfx_fill(cx + TAC_X24(i, k) + TAC_X24(i + 6, d), cy + TAC_Y24(i, k) + TAC_Y24(i + 6, d), 2, 2, p->focus);	// 2 px: no gaps on the diagonals
++	}
++	tac_disc(cx, cy, r * 3 / 4, p->focus);
++	tac_circle(cx, cy, r * 3 / 4 - 5, p->bg);
++	tac_disc(cx, cy, r / 3, p->bg);
++	tac_circle(cx, cy, r / 3, p->fg);
++	for (int k = 0; k < 4; k++)	// a keyway
++		gfx_hline(cx - 3, cy - r / 3 - 4 + k, 7, p->bg);
++}
++
++// An orbit: a planet, an elliptical track round it with a satellite on it, and a few stars
++static void tac_orbit(const tac_pal_t *p, int cx, int cy, int r)
++{
++	tac_disc(cx, cy, r / 3, p->hint_bg);
++	tac_circle(cx, cy, r / 3, p->dim);
++	int a = r, b = r * 2 / 5;
++	for (int x = -a; x <= a; x++) {		// the ellipse, by columns and rows so it has no gaps
++		int y = tac_isqrt((b * b - b * b * x * x / (a * a)));
++		gfx_pixel(cx + x, cy + y, p->fg);
++		if (y > r / 3 || TAC_ABS(x) > r / 3)
++			gfx_pixel(cx + x, cy - y, p->fg);	// behind the planet: hidden
++	}
++	for (int y = -b; y <= b; y++) {
++		int x = tac_isqrt((a * a - a * a * y * y / (b * b)));
++		gfx_pixel(cx + x, cy + y, p->fg);
++		gfx_pixel(cx - x, cy + y, p->fg);
++	}
++	int sx = cx + a * 3 / 5, sy = cy + b * 4 / 5;	// the satellite: a body and two panels
++	for (int k = -2; k <= 2; k++)
++		gfx_hline(sx - 2, sy + k, 5, p->focus);
++	for (int k = -1; k <= 1; k++) {
++		gfx_hline(sx - 12, sy + k, 8, p->chnum);
++		gfx_hline(sx + 5, sy + k, 8, p->chnum);
++	}
++	static const int8_t star[6][2] = { { -40, -46 }, { 44, -40 }, { -52, 20 }, { 30, -56 }, { 54, 30 }, { -20, 50 } };
++	for (int k = 0; k < 6; k++) {
++		int x = cx + star[k][0] * r / 56, y = cy + star[k][1] * r / 56;
++		gfx_pixel(x, y, p->fg); gfx_pixel(x - 1, y, p->dim); gfx_pixel(x + 1, y, p->dim);
++		gfx_pixel(x, y - 1, p->dim); gfx_pixel(x, y + 1, p->dim);
++	}
++}
++
++// One point of a compass rose: a narrow diamond from the center out to radius l
++static void tac_point(int cx, int cy, int i, int l, int w, color_t c)
++{
++	for (int k = 0; k <= l; k++) {
++		int half = k < l / 4 ? k * w / (l / 4 + 1) : (l - k) * w / (l - l / 4 + 1);
++		int x = cx + TAC_X24(i, k), y = cy + TAC_Y24(i, k);
++		for (int d = -half; d <= half; d++)
++			gfx_pixel(x + (i % 12 ? 0 : d), y + (i % 12 ? d : 0), c);
++	}
++}
++
++// A compass rose: a bezel with ticks, eight points, north in red, and the N
++static void tac_compass(const tac_pal_t *p, int cx, int cy, int r)
++{
++	tac_circle(cx, cy, r, p->fg);
++	tac_circle(cx, cy, r - 1, p->fg);
++	for (int i = 0; i < 24; i++)
++		tac_ray(cx, cy, i, r - (i % 6 ? 4 : 8), r - 2, 1, i % 6 ? p->dim : p->fg);
++	for (int i = 3; i < 24; i += 6)
++		tac_ray(cx, cy, i, 4, r * 3 / 5, 1, p->dim);	// the half points as rays
++	tac_point(cx, cy, 6, r * 3 / 4, 4, p->fg);
++	tac_point(cx, cy, 12, r * 3 / 4, 4, p->fg);
++	tac_point(cx, cy, 18, r * 3 / 4, 4, p->fg);
++	tac_point(cx, cy, 0, r * 3 / 4, 4, p->tx);
++	tac_disc(cx, cy, 3, p->focus);
++	kawaii_center(ui_layout.small, cy - r - ui_layout.small->h - 2, "N", p->tx);
++}
++
++// A brass ring: a double band with rivets and a diamond at the center, as a bottle seal or a saddle concho
++static void tac_ring(const tac_pal_t *p, int cx, int cy, int r)
++{
++	tac_disc(cx, cy, r, p->focus);
++	tac_disc(cx, cy, r - 3, p->bg);
++	tac_disc(cx, cy, r - 12, p->focus);
++	tac_disc(cx, cy, r - 15, p->hint_bg);
++	for (int i = 0; i < 24; i += 2)
++		tac_disc(cx + TAC_X24(i, r - 7), cy + TAC_Y24(i, r - 7), 1, p->dim);
++	int d = r / 3;
++	for (int k = 0; k <= d; k++) {
++		gfx_hline(cx - (d - k), cy - k, 2 * (d - k) + 1, p->focus);
++		gfx_hline(cx - (d - k), cy + k, 2 * (d - k) + 1, p->focus);
++	}
++	gfx_hline(cx - r + 18, cy, r / 2 - 8, p->dim);
++	gfx_hline(cx + d + 6, cy, r / 2 - 8, p->dim);
++}
++
++// A radar sweep: range rings, a cross, storm cells in the echo colors and the sweep line
++static void tac_sweep(const tac_pal_t *p, int cx, int cy, int r)
++{
++	int hx = cx + r / 3, hy = cy - r / 4;
++	tac_disc(hx, hy, r / 3, p->rx);
++	tac_disc(hx + 3, hy - 2, r / 5, p->warn);
++	tac_disc(hx + 5, hy - 3, r / 10, p->tx);
++	tac_disc(cx - r / 2, cy + r / 3, r / 6, p->rx);
++	tac_disc(cx - r / 2 + 2, cy + r / 3, r / 12, p->warn);
++	for (int k = 1; k <= 3; k++)
++		tac_circle(cx, cy, r * k / 3, p->line);
++	gfx_hline(cx - r, cy, 2 * r + 1, p->line);
++	gfx_vline(cx, cy - r, 2 * r + 1, p->line);
++	tac_circle(cx, cy, r, p->dim);
++	tac_line(cx, cy, cx + TAC_X24(2, r), cy + TAC_Y24(2, r), 2, p->fg);
++	tac_disc(cx, cy, 2, p->fg);
++}
++
++// A terminal: a window with a title bar, READY. and a block cursor
++static void tac_prompt(const tac_pal_t *p, int cx, int cy, int r)
++{
++	int x0 = cx - r - 8, y0 = cy - r * 3 / 4, w = 2 * r + 17, h = r * 3 / 2;
++	for (int y = y0; y < y0 + 10; y++)
++		gfx_hline(x0, y, w, p->strip_bg);
++	for (int t = 0; t < 2; t++) {
++		gfx_hline(x0, y0 + h - 1 - t, w, p->fg);
++		gfx_vline(x0 + t, y0, h, p->fg);
++		gfx_vline(x0 + w - 1 - t, y0, h, p->fg);
++	}
++	const font_t *f = ui_layout.medium;
++	gfx_text(f, x0 + 8, y0 + 18, "READY.", p->fg);
++	int cyy = y0 + 18 + f->h + 6;
++	for (int y = cyy; y < cyy + f->h; y++)
++		gfx_hline(x0 + 8, y, f->h * 2 / 3, p->focus);
++}
++
 +static void tactical_boot(const char *board_name, const char *version, const char *line1, const char *line2)
 +{
 +	const tac_pal_t *p = tac_pal();
@@ -728,6 +1153,14 @@ index d722143..aedf81d 100644
 +	case TAC_EM_HORIZON: tac_horizon(p, w / 2, cy, r); break;
 +	case TAC_EM_SIGHT: tac_sight(p, w / 2, cy, r); break;
 +	case TAC_EM_DIAL: tac_dial(p, w / 2, cy, r); break;
++	case TAC_EM_VU: tac_vu(p, w / 2, cy, r); break;
++	case TAC_EM_TACH: tac_tach(p, w / 2, cy, r); break;
++	case TAC_EM_GEAR: tac_gear(p, w / 2, cy, r); break;
++	case TAC_EM_ORBIT: tac_orbit(p, w / 2, cy, r); break;
++	case TAC_EM_COMPASS: tac_compass(p, w / 2, cy, r); break;
++	case TAC_EM_RING: tac_ring(p, w / 2, cy, r); break;
++	case TAC_EM_SWEEP: tac_sweep(p, w / 2, cy, r); break;
++	case TAC_EM_PROMPT: tac_prompt(p, w / 2, cy, r); break;
 +	default: tac_reticle(p, w / 2, cy, r); break;
 +	}
 +	int y = cy + r + 20;
@@ -757,7 +1190,7 @@ index d722143..aedf81d 100644
  #endif
  
  static const color_t acc[UI_ACCENT_COUNT] = {
-@@ -210,7 +627,7 @@ static void accent_apply(void)
+@@ -210,7 +1026,7 @@ static void accent_apply(void)
  	if (a != UI_ACCENT_DEFAULT) {
  		ui_col.focus = c;
  		ui_col.focus_fg = RGB565(0, 0, 0);
@@ -766,7 +1199,7 @@ index d722143..aedf81d 100644
  	}
  #if CONFIG_UI_KAWAII
  	if (kawaii() && ui_theme != 2 && (a == UI_ACCENT_DEFAULT || a == UI_ACCENT_PINK)) {
-@@ -219,6 +636,15 @@ static void accent_apply(void)
+@@ -219,6 +1035,15 @@ static void accent_apply(void)
  		ui_col.chnum = ROSE_ACCENT;
  		ui_col.strip_warn = ROSE_INK;
  	}
@@ -782,7 +1215,7 @@ index d722143..aedf81d 100644
  #endif
  }
  
-@@ -282,6 +708,23 @@ void ui_theme_set(uint8_t theme)
+@@ -282,6 +1107,23 @@ void ui_theme_set(uint8_t theme)
  		ui_col.hint_bg = ROSE_SOFT;
  		ui_col.priv = ROSE_ACCENT;
  	}
@@ -806,7 +1239,7 @@ index d722143..aedf81d 100644
  #endif
  	accent_apply();
  }
-@@ -1245,6 +1688,10 @@ void ui_draw_splash(const char *board_name, const char *version, const char *lin
+@@ -1245,6 +2087,10 @@ void ui_draw_splash(const char *board_name, const char *version, const char *lin
  		kawaii_boot(board_name, version, line1, line2);
  		return;
  	}
@@ -817,7 +1250,7 @@ index d722143..aedf81d 100644
  #endif
  	int w = gfx_width(), h = gfx_height();
  	const ui_layout_t *L = &ui_layout;
-@@ -3122,8 +3569,8 @@ void ui_draw_home(const radio_view_t *v, const ui_state_t *s)
+@@ -3122,8 +3968,8 @@ void ui_draw_home(const radio_view_t *v, const ui_state_t *s)
  	}
  	color_t fg = ui_col.fg, dim = ui_col.dim, chnum = ui_col.chnum;
  	color_t c = acc[a];
@@ -828,7 +1261,7 @@ index d722143..aedf81d 100644
  		c = RGB565((c >> 11) * 8u * 5u / 12u,
  			   ((c >> 5) & 63u) * 4u * 5u / 12u, (c & 31u) * 8u * 5u / 12u);
  	ui_col.fg = ui_col.dim = ui_col.chnum = c;
-@@ -4186,6 +4633,72 @@ static void kawaii_grid(const ui_list_t *l, int y, int bottom)
+@@ -4186,6 +5032,72 @@ static void kawaii_grid(const ui_list_t *l, int y, int bottom)
  	if (top + capacity < l->count)
  		gfx_fill(w - 3, bottom - 4, 3, 3, ui_col.priv);
  }
@@ -901,7 +1334,7 @@ index d722143..aedf81d 100644
  #endif
  
  void ui_draw_list(const radio_view_t *v, const ui_state_t *s, const ui_list_t *l)
-@@ -4202,8 +4715,11 @@ void ui_draw_list(const radio_view_t *v, const ui_state_t *s, const ui_list_t *l
+@@ -4202,8 +5114,11 @@ void ui_draw_list(const radio_view_t *v, const ui_state_t *s, const ui_list_t *l
  		row_h += 6;
  #endif
  #if CONFIG_UI_KAWAII
@@ -928,16 +1361,18 @@ index f9d6ea9..bcfdb98 100644
  #endif
  // Color displays (Settings > Display): the highlight color (UI_ACCENT_*, ui_svc.h) for list and tile focus and Home's
 diff --git a/core/ui/ui_svc.h b/core/ui/ui_svc.h
-index 5fc1c7b..f6c27c9 100644
+index 5fc1c7b..88eadc6 100644
 --- a/core/ui/ui_svc.h
 +++ b/core/ui/ui_svc.h
-@@ -468,7 +468,8 @@ typedef enum {
+@@ -468,7 +468,10 @@ typedef enum {
  } ui_setting_t;
  
  // UI_SET_CLASSIC_STYLE values. Keep the stored values for Pink and RadioFoundry.
 -enum { UI_STYLE_PINK, UI_STYLE_RADIOFOUNDRY, UI_STYLE_CENTERED, UI_STYLE_COUNT };
 +enum { UI_STYLE_PINK, UI_STYLE_RADIOFOUNDRY, UI_STYLE_CENTERED, UI_STYLE_TACTICAL, UI_STYLE_FIELD,
-+	UI_STYLE_AVIONICS, UI_STYLE_THERMAL, UI_STYLE_PANEL, UI_STYLE_COUNT };
++	UI_STYLE_AVIONICS, UI_STYLE_THERMAL, UI_STYLE_PANEL,
++	UI_STYLE_HAM, UI_STYLE_MUSCLE, UI_STYLE_WORKSHOP, UI_STYLE_MISSION, UI_STYLE_BACKCOUNTRY, UI_STYLE_WHISKEY,
++	UI_STYLE_STORM, UI_STYLE_RETRO, UI_STYLE_COUNT };
  
  // UI_SET_ACCENT values: the theme's own highlight (blue), or one of seven. Color displays only
  enum {
